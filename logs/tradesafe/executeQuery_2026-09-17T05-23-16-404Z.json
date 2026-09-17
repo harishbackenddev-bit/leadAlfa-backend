@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-09-17T05:23:16.404Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      query getToken($tokenId: ID!) {\n        token(id: $tokenId) {\n          id\n          name\n          reference\n          user { givenName familyName email mobile }\n          organization { name type registration taxNumber }\n          balance\n        }\n      }\n    ",
+    "variables": {
+      "tokenId": "34L48OHmooMAvdtxaLifK"
+    }
+  },
+  "response": {
+    "data": {
+      "token": {
+        "id": "34L48OHmooMAvdtxaLifK",
+        "name": "harish sharma",
+        "reference": "SIT-XSWC66KY",
+        "user": {
+          "givenName": "harish",
+          "familyName": "sharma",
+          "email": "harish.backend.dev@gmail.com",
+          "mobile": "+19047369065"
+        },
+        "organization": null,
+        "balance": 0
+      }
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

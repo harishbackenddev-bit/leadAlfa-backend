@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-09-16T05:01:33.397Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      mutation tokenDeposit($id: ID!, $embed: Boolean, $minutes: Int, $paymentMethods: [PaymentGateway!]) {\n        tokenDeposit(id: $id, embed: $embed, minutes: $minutes, paymentMethods: $paymentMethods) {\n          id\n          url\n          expiresAt\n        }\n      }\n    ",
+    "variables": {
+      "embed": false,
+      "minutes": 60
+    }
+  },
+  "response": {
+    "errors": [
+      {
+        "message": "Variable \"$id\" of required type \"ID!\" was not provided.",
+        "locations": [
+          {
+            "line": 1,
+            "column": 23
+          }
+        ],
+        "extensions": {
+          "file": "/var/task/vendor/webonyx/graphql-php/src/Executor/Values.php",
+          "line": 98
+        }
+      }
+    ]
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

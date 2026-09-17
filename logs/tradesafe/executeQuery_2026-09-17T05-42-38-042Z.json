@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-09-17T05:42:38.041Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      query getToken($tokenId: ID!) {\n        token(id: $tokenId) {\n          id\n          name\n          reference\n          user { givenName familyName email mobile }\n          organization { name type registration taxNumber }\n          balance\n        }\n      }\n    ",
+    "variables": {
+      "tokenId": "34L40pDZS32ngzhHEZTbZ"
+    }
+  },
+  "response": {
+    "data": {
+      "token": {
+        "id": "34L40pDZS32ngzhHEZTbZ",
+        "name": "Naveen kumar",
+        "reference": "SIT-XMM8VQCD",
+        "user": {
+          "givenName": "Naveen",
+          "familyName": "kumar",
+          "email": "naveen.njnj@gmail.com",
+          "mobile": "+11526759678"
+        },
+        "organization": null,
+        "balance": 0
+      }
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

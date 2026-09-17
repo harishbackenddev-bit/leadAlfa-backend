@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-09-17T05:51:02.457Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n    mutation tokenAccountWithdraw($id: ID!, $value: Float, $rtc: Boolean) {\n      tokenAccountWithdraw(id: $id, value: $value, rtc: $rtc) {\n        id\n        state\n        amount\n        reference\n        createdAt\n      }\n    }\n  ",
+    "variables": {
+      "id": "34L40pDZS32ngzhHEZTbZ",
+      "value": 100,
+      "rtc": false
+    }
+  },
+  "response": {
+    "errors": [
+      {
+        "message": "Field \"tokenAccountWithdraw\" of type \"Boolean\" must not have a sub selection.",
+        "locations": [
+          {
+            "line": 2,
+            "column": 63
+          }
+        ],
+        "extensions": {
+          "file": "/var/task/vendor/webonyx/graphql-php/src/Validator/Rules/ScalarLeafs.php",
+          "line": 24
+        }
+      }
+    ]
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

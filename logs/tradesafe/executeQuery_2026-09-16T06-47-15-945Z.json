@@ -1,0 +1,112 @@
+{
+  "timestamp": "2026-09-16T06:47:15.945Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      mutation transactionCreate($input: CreateTransactionInput!) {\n        transactionCreate(input: $input) {\n          id\n          title\n          state\n          createdAt\n          parties {\n            id\n            name\n            role\n            details { user { givenName familyName email } }\n          }\n          allocations {\n            id\n            title\n            state\n            value\n            calculation {\n              value\n              payout\n              fee\n              refund\n            }\n          }\n        }\n      }\n    ",
+    "variables": {
+      "input": {
+        "title": "Campaign CMP-A5D764 - Naveen kumar",
+        "description": "Creator payment for campaign: test1",
+        "industry": "GENERAL_GOODS_SERVICES",
+        "currency": "ZAR",
+        "feeAllocation": "BUYER",
+        "workflow": "STANDARD",
+        "parties": {
+          "create": [
+            {
+              "token": "34L40pDZS32ngzhHEZTbZ",
+              "role": "BUYER"
+            },
+            {
+              "token": "34L40pDZS32ngzhHEZTbZ",
+              "role": "SELLER"
+            },
+            {
+              "token": "33aBHSSZ1ntIsDQLHwZYh",
+              "role": "AGENT",
+              "fee": 300,
+              "feeType": "FLAT",
+              "feeAllocation": "BUYER"
+            }
+          ]
+        },
+        "allocations": {
+          "create": [
+            {
+              "title": "UGC Service",
+              "description": "Creator payment for campaign: test1",
+              "value": 1500,
+              "daysToDeliver": 7,
+              "daysToInspect": 7
+            }
+          ]
+        }
+      }
+    }
+  },
+  "response": {
+    "data": {
+      "transactionCreate": {
+        "id": "34Pg49kA9oiaHBJlFmPO5",
+        "title": "Campaign CMP-A5D764 - Naveen kumar",
+        "state": "CREATED",
+        "createdAt": "2026-09-16 06:47:14",
+        "parties": [
+          {
+            "id": "34Pg4A2aPFFK6gxh8CPn0",
+            "name": "Creatrend",
+            "role": "AGENT",
+            "details": {
+              "user": {
+                "givenName": "Blessing",
+                "familyName": "Ngorima",
+                "email": "elevatesystemsza@gmail.com"
+              }
+            }
+          },
+          {
+            "id": "34Pg49ymijnxyaKPfSXMf",
+            "name": "Naveen kumar",
+            "role": "SELLER",
+            "details": {
+              "user": {
+                "givenName": "Naveen",
+                "familyName": "kumar",
+                "email": "naveen.njnj@gmail.com"
+              }
+            }
+          },
+          {
+            "id": "34Pg49uaq11vZhnk77ZAJ",
+            "name": "Naveen kumar",
+            "role": "BUYER",
+            "details": {
+              "user": {
+                "givenName": "Naveen",
+                "familyName": "kumar",
+                "email": "naveen.njnj@gmail.com"
+              }
+            }
+          }
+        ],
+        "allocations": [
+          {
+            "id": "34Pg49rTQ5MCabcy7mtBh",
+            "title": "UGC Service",
+            "state": "CREATED",
+            "value": 1500,
+            "calculation": {
+              "value": 1500,
+              "payout": 1500,
+              "fee": 0,
+              "refund": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

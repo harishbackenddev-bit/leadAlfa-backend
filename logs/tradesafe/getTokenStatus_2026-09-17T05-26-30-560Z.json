@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-09-17T05:26:30.560Z",
+  "method": "getTokenStatus",
+  "payload": {
+    "tokenId": "34L48OHmooMAvdtxaLifK"
+  },
+  "response": {
+    "token": {
+      "id": "34L48OHmooMAvdtxaLifK",
+      "name": "harish sharma",
+      "reference": "SIT-XSWC66KY",
+      "user": {
+        "givenName": "harish",
+        "familyName": "sharma",
+        "email": "harish.backend.dev@gmail.com",
+        "mobile": "+19047369065"
+      },
+      "organization": null,
+      "balance": 0
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

@@ -1,0 +1,65 @@
+# ─────────────────────────────────────────────────────────
+# .dockerignore — Creatrend Backend
+#
+# Controls what is sent to the Docker build context.
+# Files listed here are EXCLUDED from the image.
+# ─────────────────────────────────────────────────────────
+
+# ── Node dependencies ─────────────────────────────────────
+# Reinstalled cleanly inside the image via npm ci
+node_modules
+
+# ── Git history ───────────────────────────────────────────
+# Never needed inside the container
+.git
+.gitignore
+
+# ── Environment secrets ───────────────────────────────────
+# NEVER bake secrets into the image. Inject at runtime via docker-compose.
+.env
+.env.*
+
+# ── Test infrastructure ───────────────────────────────────
+# Not needed at runtime
+__tests__
+coverage
+jest.config.*
+
+# ── Sequelize seeders directory ───────────────────────────
+# The seeders/ directory is EMPTY in this repo (confirmed by inspection).
+# Seed data (categories/skills) lives in seedData/ which IS required at runtime.
+seeders
+
+# ── Documentation (dev-only) ─────────────────────────────
+# Large .md files and frontend reference docs — not needed in the image.
+# README.md, SERVICES.md, DEPLOYMENT.md are project docs, not runtime code.
+docs
+README.md
+SERVICES.md
+DEPLOYMENT.md
+REVIEW_SUMMARY.md
+
+# ── Build artefacts ───────────────────────────────────────
+build
+dist
+npm-debug.log*
+
+# ── IDE / editor files ────────────────────────────────────
+.cursor
+.vscode
+.idea
+
+# ── OS files ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Docker files themselves ───────────────────────────────
+# These are build-time only; not needed inside the container
+Dockerfile
+.dockerignore
+docker-compose*.yml
+nginx
+
+# ── Vercel deployment config ──────────────────────────────
+# Not relevant inside Docker
+vercel.json

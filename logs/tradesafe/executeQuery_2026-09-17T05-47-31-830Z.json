@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-09-17T05:47:31.830Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      mutation tokenWithdraw($input: TokenWithdrawInput!) {\n        tokenWithdraw(input: $input) {\n          id\n          state\n          amount\n          reference\n          createdAt\n        }\n      }\n    ",
+    "variables": {
+      "input": {
+        "tokenId": "34L40pDZS32ngzhHEZTbZ",
+        "amount": 100,
+        "reference": "WITHDRAW-1-1789624050498"
+      }
+    }
+  },
+  "response": null,
+  "error": {
+    "message": "Unknown type \"TokenWithdrawInput\". Did you mean \"TokenSettingsInput\", \"TokenUserInput\", or \"TokenInput\"?",
+    "stack": "Error: Unknown type \"TokenWithdrawInput\". Did you mean \"TokenSettingsInput\", \"TokenUserInput\", or \"TokenInput\"?\n    at TradeSafeService._executeQuery (/var/www/html/Node_projects/creatrend-backend/services/tradesafe.service.js:104:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async TradeSafeService.tokenWithdraw (/var/www/html/Node_projects/creatrend-backend/services/tradesafe.service.js:544:22)\n    at async withdrawCreatorFunds (/var/www/html/Node_projects/creatrend-backend/services/tradesafePaymentService.js:971:22)\n    at async withdrawCreatorFundsController (/var/www/html/Node_projects/creatrend-backend/controllers/tradesafePaymentController.js:274:20)"
+  },
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

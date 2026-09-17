@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-09-17T05:47:31.828Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      mutation tokenWithdraw($input: TokenWithdrawInput!) {\n        tokenWithdraw(input: $input) {\n          id\n          state\n          amount\n          reference\n          createdAt\n        }\n      }\n    ",
+    "variables": {
+      "input": {
+        "tokenId": "34L40pDZS32ngzhHEZTbZ",
+        "amount": 100,
+        "reference": "WITHDRAW-1-1789624050498"
+      }
+    }
+  },
+  "response": {
+    "errors": [
+      {
+        "message": "Unknown type \"TokenWithdrawInput\". Did you mean \"TokenSettingsInput\", \"TokenUserInput\", or \"TokenInput\"?",
+        "locations": [
+          {
+            "line": 1,
+            "column": 32
+          }
+        ],
+        "extensions": {
+          "file": "/var/task/vendor/webonyx/graphql-php/src/Validator/Rules/KnownTypeNames.php",
+          "line": 74
+        }
+      },
+      {
+        "message": "Cannot query field \"tokenWithdraw\" on type \"Mutation\".",
+        "locations": [
+          {
+            "line": 2,
+            "column": 9
+          }
+        ],
+        "extensions": {
+          "file": "/var/task/vendor/webonyx/graphql-php/src/Validator/Rules/FieldsOnCorrectType.php",
+          "line": 43
+        }
+      }
+    ]
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-09-16T05:01:33.399Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      mutation tokenDeposit($id: ID!, $embed: Boolean, $minutes: Int, $paymentMethods: [PaymentGateway!]) {\n        tokenDeposit(id: $id, embed: $embed, minutes: $minutes, paymentMethods: $paymentMethods) {\n          id\n          url\n          expiresAt\n        }\n      }\n    ",
+    "variables": {
+      "embed": false,
+      "minutes": 60
+    }
+  },
+  "response": null,
+  "error": {
+    "message": "Variable \"$id\" of required type \"ID!\" was not provided.",
+    "stack": "Error: Variable \"$id\" of required type \"ID!\" was not provided.\n    at TradeSafeService._executeQuery (/var/www/html/Node_projects/creatrend-backend/services/tradesafe.service.js:104:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async TradeSafeService.tokenDeposit (/var/www/html/Node_projects/creatrend-backend/services/tradesafe.service.js:375:22)\n    at async fundCampaign (/var/www/html/Node_projects/creatrend-backend/services/tradesafePaymentService.js:195:27)\n    at async fundCampaignController (/var/www/html/Node_projects/creatrend-backend/controllers/tradesafePaymentController.js:75:20)"
+  },
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

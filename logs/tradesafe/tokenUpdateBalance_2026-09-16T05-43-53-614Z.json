@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-09-16T05:43:53.614Z",
+  "method": "tokenUpdateBalance",
+  "payload": {
+    "id": "34L4Qgv5KjkWYKpEOf3os",
+    "value": 1811.25,
+    "type": "CREDIT"
+  },
+  "response": {
+    "tokenUpdateBalance": {
+      "id": "34L4Qgv5KjkWYKpEOf3os",
+      "balance": 30374.69
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

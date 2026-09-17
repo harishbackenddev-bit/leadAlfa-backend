@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-09-17T05:42:38.042Z",
+  "method": "getTokenStatus",
+  "payload": {
+    "tokenId": "34L40pDZS32ngzhHEZTbZ"
+  },
+  "response": {
+    "token": {
+      "id": "34L40pDZS32ngzhHEZTbZ",
+      "name": "Naveen kumar",
+      "reference": "SIT-XMM8VQCD",
+      "user": {
+        "givenName": "Naveen",
+        "familyName": "kumar",
+        "email": "naveen.njnj@gmail.com",
+        "mobile": "+11526759678"
+      },
+      "organization": null,
+      "balance": 0
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}
