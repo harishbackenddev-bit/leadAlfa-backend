@@ -10,15 +10,21 @@ const {
   releaseFundsToCreator,
   getCampaignPaymentStatus,
   getCreatorPaymentSummary,
-    getCreatorWalletBalance,
+  getCreatorWalletBalance,
   withdrawCreatorFunds,
-    getCreatorTransactionHistory,
+  getCreatorTransactionHistory,
+  cancelCreatorEscrow
 } = require("../services/tradesafePaymentService");
+
+const {
+  generateEstimatedFundingQuote,
+} = require("../services/fundingQuoteService");
+
 const FundingBatch = require("../models/transaction/fundingBatch.model");
 const Campaign = require("../models/campaigns/campaign.model");
 const AppError = require("../utils/appError");
 const CampaignInvoice = require("../models/campaigns/campaignInvoice.model");
-
+const Invoice = require("../models/campaigns/campaignInvoice.model");
 
 const errResp = (res, err) => {
   if (err instanceof AppError) {
@@ -77,9 +83,19 @@ const syncAcceptedCreatorsController = async (req, res) => {
 const fundCampaignController = async (req, res) => {
   try {
     const campaignId = await resolveCampaignId(req.params.campaignId);
+
+    console.log("📩 fundCampaign called:", {
+      campaignId,
+      brandId: req.brandId,
+    });
+
+    // ✅ No payment method payload
     const result = await fundCampaign(campaignId, req.brandId);
+
     return res.status(201).json({ success: true, data: result });
-  } catch (err) { return errResp(res, err); }
+  } catch (err) {
+    return errResp(res, err);
+  }
 };
 
 // ============================================================
@@ -161,7 +177,7 @@ const selectCreatorController = async (req, res) => {
       });
     }
 
-    console.log(`✅ Creator ${creatorId} amount: R${perCreatorAmount.toFixed(2)} (budget R${totalBudgetCents/100} / ${creatorCount} creators)`);
+    console.log(`✅ Creator ${creatorId} amount: R${perCreatorAmount.toFixed(2)} (budget R${totalBudgetCents / 100} / ${creatorCount} creators)`);
 
     const result = await createCreatorEscrow(
       campaignId,
@@ -241,8 +257,8 @@ const releaseFundsToCreatorController = async (req, res) => {
       result.status === "PAYOUT_TRIGGERED"
         ? "Payout triggered. Awaiting TradeSafe confirmation."
         : result.status === "PENDING_ACCEPTANCE"
-        ? "Waiting on TradeSafe acceptance callback."
-        : "Funds released successfully";
+          ? "Waiting on TradeSafe acceptance callback."
+          : "Funds released successfully";
 
     return res.status(200).json({ success: true, message, data: result });
   } catch (err) { return errResp(res, err); }
@@ -291,6 +307,47 @@ const getCreatorTransactionHistoryController = async (req, res) => {
 
 
 
+// ✅ NEW: Get estimated funding fee (no payment method)
+const getEstimatedFeeController = async (req, res) => {
+  try {
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+
+    const campaign = await Campaign.findOne({
+      where: { id: campaignId, brandId: req.brandId, isDeleted: false },
+      attributes: ["id", "campaignBudgetCents"],
+    });
+    if (!campaign) {
+      return res.status(404).json({ success: false, error: "Campaign not found" });
+    }
+
+    const quote = await generateEstimatedFundingQuote(campaign);
+    return res.status(200).json({ success: true, data: quote });
+  } catch (err) { return errResp(res, err); }
+};
+
+const cancelCreatorEscrowController = async (req, res) => {
+  try {
+    const { creatorId, reason } = req.body;
+    if (!creatorId) {
+      return res.status(400).json({ success: false, error: "creatorId required" });
+    }
+
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+    const result = await cancelCreatorEscrow(
+      campaignId,
+      creatorId,
+      req.brandId,
+      reason
+    );
+
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) {
+    return errResp(res, err);
+  }
+};
+
+
+
 module.exports = {
   getAcceptedCreatorsController,
   syncAcceptedCreatorsController,
@@ -302,7 +359,9 @@ module.exports = {
   getCampaignPaymentStatusController,
   getCreatorPaymentSummaryController,
   releaseFundsToCreatorController,
-    getCreatorBalanceController,
+  getCreatorBalanceController,
   withdrawCreatorFundsController,
   getCreatorTransactionHistoryController,
+  getEstimatedFeeController,
+  cancelCreatorEscrowController
 };

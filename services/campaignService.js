@@ -234,7 +234,7 @@ const updateCampaign = async (userId, brandId, publicId, updates, files) => {
     }
 
     // ✅ Sirf campaign funding status check karo — invoice mat dekho
-    const blockedFundingStatuses = ['AWAITING_FUNDING', 'FUNDS_RECEIVED', 'FUNDED'];
+    const blockedFundingStatuses = ['FUNDS_RECEIVED', 'FUNDED'];
     if (blockedFundingStatuses.includes(campaign.fundingStatus)) {
       throw new AppError(
         "This campaign has already been funded and cannot be edited.",

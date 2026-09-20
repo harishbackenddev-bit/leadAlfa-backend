@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-09-18T06:14:57.419Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n    mutation tokenDeposit($id: ID!, $embed: Boolean, $minutes: Int, $paymentMethods: [PaymentGateway!], $value: Int) {\n      tokenDeposit(id: $id, embed: $embed, minutes: $minutes, paymentMethods: $paymentMethods, value: $value) {\n        id\n        url\n        expiresAt\n      }\n    }\n  ",
+    "variables": {
+      "id": "34L4Qgv5KjkWYKpEOf3os",
+      "embed": false,
+      "minutes": 60,
+      "paymentMethods": [
+        "SNAP"
+      ],
+      "value": 8890
+    }
+  },
+  "response": null,
+  "error": {
+    "message": "Variable \"$paymentMethods\" got invalid value \"SNAP\" at \"paymentMethods[0]\"; Value \"SNAP\" does not exist in \"PaymentGateway\" enum.",
+    "stack": "Error: Variable \"$paymentMethods\" got invalid value \"SNAP\" at \"paymentMethods[0]\"; Value \"SNAP\" does not exist in \"PaymentGateway\" enum.\n    at TradeSafeService._executeQuery (/var/www/html/Node_projects/creatrend-backend/services/tradesafe.service.js:104:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async TradeSafeService.tokenDeposit (/var/www/html/Node_projects/creatrend-backend/services/tradesafe.service.js:382:20)\n    at async fundCampaign (/var/www/html/Node_projects/creatrend-backend/services/tradesafePaymentService.js:210:23)\n    at async fundCampaignController (/var/www/html/Node_projects/creatrend-backend/controllers/tradesafePaymentController.js:88:20)"
+  },
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-09-20T12:32:18.668Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n    mutation transactionCancel($id: ID!, $comment: String) {\n      transactionCancel(id: $id, comment: $comment) { id state }\n    }\n  ",
+    "variables": {
+      "id": "34S5oTuLcrC6VDcGg85wf",
+      "comment": "Brand cancelled creator escrow"
+    }
+  },
+  "response": {
+    "data": {
+      "transactionCancel": {
+        "id": "34S5oTuLcrC6VDcGg85wf",
+        "state": "CANCELED"
+      }
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

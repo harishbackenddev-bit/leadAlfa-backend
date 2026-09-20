@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-09-18T05:16:24.380Z",
+  "method": "tokenDeposit",
+  "payload": {
+    "id": "34L4Qgv5KjkWYKpEOf3os",
+    "embed": false,
+    "minutes": 60,
+    "paymentMethods": [
+      "EFT"
+    ]
+  },
+  "response": {
+    "tokenDeposit": {
+      "id": "UGF5bWVudEludGVudDowMWEwYjJmMS1jNTE2LTcyYmQtYjlkNC0xOWZiZTBjZjVjYTc=",
+      "url": "https://pay-sandbox.tradesafe.dev/RxP66zJnBNf",
+      "expiresAt": "2026-09-18 06:16:24"
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

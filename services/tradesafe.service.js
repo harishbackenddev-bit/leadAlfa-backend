@@ -312,14 +312,18 @@ class TradeSafeService {
     return result.transactionCreate;
   }
 
-  async transactionCancel(transactionId) {
+  async transactionCancel(transactionId, options = {}) {
     const mutation = `
-      mutation transactionCancel($id: ID!) {
-        transactionCancel(id: $id) { id state }
-      }
-    `;
-    const result = await this._executeQuery(mutation, { id: transactionId });
-    this._logApiCall('transactionCancel', { id: transactionId }, result);
+    mutation transactionCancel($id: ID!, $comment: String) {
+      transactionCancel(id: $id, comment: $comment) { id state }
+    }
+  `;
+
+    const variables = { id: transactionId };
+    if (options.comment) variables.comment = options.comment;
+
+    const result = await this._executeQuery(mutation, variables);
+    this._logApiCall('transactionCancel', variables, result);
     return result.transactionCancel;
   }
 
@@ -350,16 +354,18 @@ class TradeSafeService {
   async tokenDeposit(tokenId, options = {}) {
     console.log("💰 tokenDeposit STARTED");
     console.log("   Token ID:", tokenId);
+    console.log("   Value:", options.value);
+    console.log("   Payment Methods:", options.paymentMethods);
 
     const mutation = `
-      mutation tokenDeposit($id: ID!, $embed: Boolean, $minutes: Int, $paymentMethods: [PaymentGateway!]) {
-        tokenDeposit(id: $id, embed: $embed, minutes: $minutes, paymentMethods: $paymentMethods) {
-          id
-          url
-          expiresAt
-        }
+    mutation tokenDeposit($id: ID!, $embed: Boolean, $minutes: Int, $paymentMethods: [PaymentGateway!], $value: Int) {
+      tokenDeposit(id: $id, embed: $embed, minutes: $minutes, paymentMethods: $paymentMethods, value: $value) {
+        id
+        url
+        expiresAt
       }
-    `;
+    }
+  `;
 
     const variables = {
       id: tokenId,
@@ -369,6 +375,11 @@ class TradeSafeService {
 
     if (options.paymentMethods?.length) {
       variables.paymentMethods = options.paymentMethods;
+    }
+
+    // ✅ Add value (integer, rands)
+    if (options.value !== undefined && options.value !== null) {
+      variables.value = Math.round(Number(options.value));
     }
 
     try {
@@ -517,38 +528,38 @@ class TradeSafeService {
 
 
 
- // ========== TOKEN ACCOUNT WITHDRAWAL ==========
+  // ========== TOKEN ACCOUNT WITHDRAWAL ==========
 
-async tokenAccountWithdraw({ tokenId, value, rtc = false }) {
-  console.log("💰 tokenAccountWithdraw STARTED");
-  console.log("   Token ID:", tokenId);
-  console.log("   Value:", value);
-  console.log("   RTC:", rtc);
+  async tokenAccountWithdraw({ tokenId, value, rtc = false }) {
+    console.log("💰 tokenAccountWithdraw STARTED");
+    console.log("   Token ID:", tokenId);
+    console.log("   Value:", value);
+    console.log("   RTC:", rtc);
 
-  // ✅ tokenAccountWithdraw returns Boolean — no sub-selection
-  const mutation = `
+    // ✅ tokenAccountWithdraw returns Boolean — no sub-selection
+    const mutation = `
     mutation tokenAccountWithdraw($id: ID!, $value: Float, $rtc: Boolean) {
       tokenAccountWithdraw(id: $id, value: $value, rtc: $rtc)
     }
   `;
 
-  const variables = {
-    id: tokenId,
-    value,
-    rtc,
-  };
+    const variables = {
+      id: tokenId,
+      value,
+      rtc,
+    };
 
-  try {
-    const result = await this._executeQuery(mutation, variables);
-    this._logApiCall('tokenAccountWithdraw', variables, result);
-    console.log("✅ tokenAccountWithdraw COMPLETED");
-    console.log("   Result:", result.tokenAccountWithdraw);
-    return result.tokenAccountWithdraw; // true/false
-  } catch (error) {
-    console.error("❌ tokenAccountWithdraw failed:", error.message);
-    throw error;
+    try {
+      const result = await this._executeQuery(mutation, variables);
+      this._logApiCall('tokenAccountWithdraw', variables, result);
+      console.log("✅ tokenAccountWithdraw COMPLETED");
+      console.log("   Result:", result.tokenAccountWithdraw);
+      return result.tokenAccountWithdraw; // true/false
+    } catch (error) {
+      console.error("❌ tokenAccountWithdraw failed:", error.message);
+      throw error;
+    }
   }
-}
 
 
 }

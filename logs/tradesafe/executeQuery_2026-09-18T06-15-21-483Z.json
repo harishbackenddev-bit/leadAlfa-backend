@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-09-18T06:15:21.483Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n    mutation tokenDeposit($id: ID!, $embed: Boolean, $minutes: Int, $paymentMethods: [PaymentGateway!], $value: Int) {\n      tokenDeposit(id: $id, embed: $embed, minutes: $minutes, paymentMethods: $paymentMethods, value: $value) {\n        id\n        url\n        expiresAt\n      }\n    }\n  ",
+    "variables": {
+      "id": "34L4Qgv5KjkWYKpEOf3os",
+      "embed": false,
+      "minutes": 60,
+      "paymentMethods": [
+        "OZOW"
+      ],
+      "value": 8726
+    }
+  },
+  "response": {
+    "data": {
+      "tokenDeposit": {
+        "id": "UGF5bWVudEludGVudDowMWEwYjMyNy1iZGVmLTcwYTEtOWM2MC0zNzBjNmUxODQxYmI=",
+        "url": "https://pay-sandbox.tradesafe.dev/HqZCC8zBT8S",
+        "expiresAt": "2026-09-18 07:15:21"
+      }
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

@@ -1,0 +1,105 @@
+{
+  "timestamp": "2026-09-17T10:28:24.429Z",
+  "method": "transactionCreate",
+  "payload": {
+    "title": "Campaign CMP-151AC7 - Naveen kumar",
+    "description": "Creator payment for campaign: test camp",
+    "industry": "GENERAL_GOODS_SERVICES",
+    "currency": "ZAR",
+    "feeAllocation": "BUYER",
+    "workflow": "STANDARD",
+    "parties": {
+      "create": [
+        {
+          "token": "34L4Qgv5KjkWYKpEOf3os",
+          "role": "BUYER"
+        },
+        {
+          "token": "34L40pDZS32ngzhHEZTbZ",
+          "role": "SELLER"
+        },
+        {
+          "token": "33aBHSSZ1ntIsDQLHwZYh",
+          "role": "AGENT",
+          "fee": 684,
+          "feeType": "FLAT",
+          "feeAllocation": "BUYER"
+        }
+      ]
+    },
+    "allocations": {
+      "create": [
+        {
+          "title": "UGC Service",
+          "description": "Creator payment for campaign: test camp",
+          "value": 3420,
+          "daysToDeliver": 7,
+          "daysToInspect": 7
+        }
+      ]
+    }
+  },
+  "response": {
+    "transactionCreate": {
+      "id": "34QKpdeGfr63UC6LbL6M8",
+      "title": "Campaign CMP-151AC7 - Naveen kumar",
+      "state": "CREATED",
+      "createdAt": "2026-09-17 10:28:22",
+      "parties": [
+        {
+          "id": "34QKpeTjp20RRUteZ16mV",
+          "name": "Creatrend",
+          "role": "AGENT",
+          "details": {
+            "user": {
+              "givenName": "Blessing",
+              "familyName": "Ngorima",
+              "email": "elevatesystemsza@gmail.com"
+            }
+          }
+        },
+        {
+          "id": "34QKpePXue5RcwzF5gdik",
+          "name": "Naveen kumar",
+          "role": "SELLER",
+          "details": {
+            "user": {
+              "givenName": "Naveen",
+              "familyName": "kumar",
+              "email": "naveen.njnj@gmail.com"
+            }
+          }
+        },
+        {
+          "id": "34QKpeL9v3si7JmqSVgzA",
+          "name": "test",
+          "role": "BUYER",
+          "details": {
+            "user": {
+              "givenName": "Test",
+              "familyName": "Brand",
+              "email": "Brandnew@gmail.com"
+            }
+          }
+        }
+      ],
+      "allocations": [
+        {
+          "id": "34QKpeIcnjWwjxrL0yyWl",
+          "title": "UGC Service",
+          "state": "CREATED",
+          "value": 3420,
+          "calculation": {
+            "value": 3420,
+            "payout": 3420,
+            "fee": 0,
+            "refund": 0
+          }
+        }
+      ]
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

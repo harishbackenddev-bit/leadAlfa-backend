@@ -17,7 +17,9 @@ const {
   releaseFundsToCreatorController,
   getCreatorBalanceController,
   withdrawCreatorFundsController,
-  getCreatorTransactionHistoryController
+  getCreatorTransactionHistoryController,
+  getEstimatedFeeController,
+  cancelCreatorEscrowController
 } = require("../controllers/tradesafePaymentController");
 
 // ========== BRAND ROUTES ==========
@@ -140,6 +142,26 @@ router.get(
   authenticateJWT,
   allowRoles("creator"),
   getCreatorTransactionHistoryController
+);
+
+// ========== FUNDING QUOTE ROUTES ==========
+
+
+
+router.get(
+  "/campaign/:campaignId/estimated-fee",
+  authenticateJWT,
+  attachBrandContext,
+  allowRoles("brand"),
+  getEstimatedFeeController
+);
+
+router.post(
+  "/campaign/:campaignId/cancel-creator",
+  authenticateJWT,
+  attachBrandContext,
+  allowRoles("brand"),
+  cancelCreatorEscrowController
 );
 
 module.exports = router;

@@ -31,12 +31,17 @@ const handleTradeSafeWebhook = async (req, res) => {
 
         // Creator escrow funding
         const tsTxId = data?.transactionId;
+
         if (tsTxId) {
           const tx = await Transaction.findOne({
-            where: { tradesafeTransactionId: tsTxId, status: 'CREATED' },
+            where: { tradesafeTransactionId: tsTxId },
           });
-          if (tx) {
-            await tx.update({ status: 'FUNDED', fundedAt: new Date() });
+          if (tx && tx.status === 'CREATED') {
+            await tx.update({
+              status: 'FUNDED',
+              fundedAt: new Date(),
+              tradesafeFundingStatus: 'FUNDS_RECEIVED',
+            });
             console.log(`✅ Creator escrow funded: ${tx.id}`);
           }
         }

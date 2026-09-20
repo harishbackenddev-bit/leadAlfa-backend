@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-09-20T12:32:18.669Z",
+  "method": "transactionCancel",
+  "payload": {
+    "id": "34S5oTuLcrC6VDcGg85wf",
+    "comment": "Brand cancelled creator escrow"
+  },
+  "response": {
+    "transactionCancel": {
+      "id": "34S5oTuLcrC6VDcGg85wf",
+      "state": "CANCELED"
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

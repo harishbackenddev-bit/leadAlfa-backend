@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-09-17T10:30:04.170Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n    mutation tokenAccountWithdraw($id: ID!, $value: Float, $rtc: Boolean) {\n      tokenAccountWithdraw(id: $id, value: $value, rtc: $rtc)\n    }\n  ",
+    "variables": {
+      "id": "34L40pDZS32ngzhHEZTbZ",
+      "value": 200,
+      "rtc": false
+    }
+  },
+  "response": {
+    "data": {
+      "tokenAccountWithdraw": true
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

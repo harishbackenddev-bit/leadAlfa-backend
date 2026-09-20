@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-09-17T10:01:56.111Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      query getToken($tokenId: ID!) {\n        token(id: $tokenId) {\n          id\n          name\n          reference\n          user { givenName familyName email mobile }\n          organization { name type registration taxNumber }\n          balance\n        }\n      }\n    ",
+    "variables": {
+      "tokenId": "34L4Qgv5KjkWYKpEOf3os"
+    }
+  },
+  "response": {
+    "data": {
+      "token": {
+        "id": "34L4Qgv5KjkWYKpEOf3os",
+        "name": "test (Pty) Ltd",
+        "reference": "SIT-X5J9KSPP",
+        "user": {
+          "givenName": "Test",
+          "familyName": "Brand",
+          "email": "Brandnew@gmail.com",
+          "mobile": "+2791123456789"
+        },
+        "organization": {
+          "name": "test",
+          "type": "PRIVATE",
+          "registration": "2000/123456/07",
+          "taxNumber": "1234567890"
+        },
+        "balance": 50239.29
+      }
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}
