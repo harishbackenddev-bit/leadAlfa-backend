@@ -284,19 +284,18 @@ const fundCampaign = async (campaignId, brandUserId, options = {}) => {
 // ============================================================
 // CONFIRM CAMPAIGN FUNDED
 // ============================================================
-const confirmCampaignFunded = async (fundingBatchId, verifiedBalance) => {
+const confirmCampaignFunded = async (fundingBatchId) => {
   const fundingBatch = await FundingBatch.findByPk(fundingBatchId);
-  if (!fundingBatch) throw new AppError("Funding batch not found", 404);
 
-  if (verifiedBalance < parseFloat(fundingBatch.totalValue)) {
-    throw new AppError(
-      `Wallet balance (${verifiedBalance}) < required (${fundingBatch.totalValue})`,
-      400
-    );
+  if (!fundingBatch) {
+    throw new AppError("Funding batch not found", 404);
   }
 
   const campaign = await Campaign.findByPk(fundingBatch.campaignId);
-  if (!campaign) throw new AppError("Campaign not found", 404);
+
+  if (!campaign) {
+    throw new AppError("Campaign not found", 404);
+  }
 
   await fundingBatch.update({
     status: 'FULLY_FUNDED',
@@ -310,10 +309,10 @@ const confirmCampaignFunded = async (fundingBatchId, verifiedBalance) => {
     fundedAt: new Date(),
   });
 
-  // ✅ Update invoice
   const invoice = await Invoice.findOne({
     where: { campaignId: campaign.id },
   });
+
   if (invoice) {
     await invoice.update({
       paymentStatus: 'paid',
