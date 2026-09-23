@@ -164,4 +164,39 @@ router.post(
   cancelCreatorEscrowController
 );
 
+// ✅ Temporary: Credit wallet (sandbox only)
+router.post(
+  "/credit-wallet",
+  async (req, res) => {
+    try {
+      if (process.env.NODE_ENV === "production") {
+        return res.status(403).json({ error: "Disabled in production" });
+      }
+
+      const { tokenId, amount } = req.body;
+
+      if (!tokenId || !amount) {
+        return res.status(400).json({ error: "tokenId and amount required" });
+      }
+
+      const tradesafeService = require("../services/tradesafe.service");
+
+      const result = await tradesafeService.tokenUpdateBalance({
+        id: tokenId,
+        value: parseFloat(amount),
+        type: "CREDIT",
+      });
+
+      return res.status(200).json({
+        success: true,
+        balance: result?.balance,
+        tokenId,
+        amount,
+      });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+);
+
 module.exports = router;
