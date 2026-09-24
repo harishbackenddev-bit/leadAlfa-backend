@@ -9,7 +9,7 @@ module.exports = {
   // Estimated TradeSafe processing fee
   // ⚠️ Update .env when TradeSafe confirms final fee structure
   ESTIMATED_TRADESAFE_FEE_RATE_EX_VAT:
-    parseFloat(process.env.ESTIMATED_TRADESAFE_FEE_RATE_EX_VAT) || 0.055,
+    parseFloat(process.env.ESTIMATED_TRADESAFE_FEE_RATE_EX_VAT) || 0.0,
 
   // Fee base:
   // "CAMPAIGN_AMOUNT" — fee on campaign budget only
