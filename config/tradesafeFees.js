@@ -1,33 +1,21 @@
 // config/tradesafeFees.js
 module.exports = {
-  // ============================================================
-  // ✅ All values configurable via .env
-  // ============================================================
-
   VAT_RATE: parseFloat(process.env.VAT_RATE) || 0.15,
 
-  // Estimated TradeSafe processing fee
-  // ⚠️ Update .env when TradeSafe confirms final fee structure
   ESTIMATED_TRADESAFE_FEE_RATE_EX_VAT:
     parseFloat(process.env.ESTIMATED_TRADESAFE_FEE_RATE_EX_VAT) || 0.0,
 
-  // Fee base:
-  // "CAMPAIGN_AMOUNT" — fee on campaign budget only
-  // "TOTAL_WITH_CREATREND_FEES" — fee on invoice total (recommended)
   FEE_BASE: process.env.TRADESAFE_FEE_BASE || "TOTAL_WITH_CREATREND_FEES",
 
-  // Payment method selection DISABLED for now
-  PAYMENT_METHOD_SELECTION_ENABLED:
-    process.env.PAYMENT_METHOD_SELECTION_ENABLED === "true",
+  PAYMENT_METHOD_SELECTION_ENABLED: true,
 
-  // Kept for future use — not used currently
   PAYMENT_METHODS: {
     EFT: {
       label: "Manual / EFT",
       rateExVat: parseFloat(process.env.EFT_RATE_EX_VAT) || 0.0075,
       min: 0,
       max: null,
-      tradeSafeCode: "EFT",
+      tradeSafeCode: "EFT",              // ✅ Correct
       enabled: true,
     },
     OZOW: {
@@ -35,15 +23,15 @@ module.exports = {
       rateExVat: parseFloat(process.env.OZOW_RATE_EX_VAT) || 0.015,
       min: 50,
       max: 2000000,
-      tradeSafeCode: "OZOW",
+      tradeSafeCode: "OZOW",             // ✅ Correct
       enabled: true,
     },
     CARD: {
       label: "Card (Visa/Mastercard)",
-      rateExVat: parseFloat(process.env.CARD_RATE_EX_VAT) || 0.03,
+      rateExVat: parseFloat(process.env.CARD_RATE_EX_VAT) || 0.025,
       min: 50,
       max: 25000,
-      tradeSafeCode: "CARD",
+      tradeSafeCode: "CARD",             // ✅ Correct
       enabled: true,
     },
     SNAPSCAN: {
@@ -51,8 +39,32 @@ module.exports = {
       rateExVat: parseFloat(process.env.SNAPSCAN_RATE_EX_VAT) || 0.035,
       min: 50,
       max: 25000,
-      tradeSafeCode: "SNAP",
+      tradeSafeCode: "SNAPSCAN",         // ✅ FIXED (was "SNAP")
       enabled: true,
+    },
+    RCS: {
+      label: "RCS",
+      rateExVat: parseFloat(process.env.RCS_RATE_EX_VAT) || 0.0275,
+      min: 50,
+      max: 25000,
+      tradeSafeCode: "RCS",              // ✅ Correct
+      enabled: false,
+    },
+    DINERS: {
+      label: "Diners Club",
+      rateExVat: parseFloat(process.env.DINERS_RATE_EX_VAT) || 0.025,
+      min: 50,
+      max: 25000,
+      tradeSafeCode: "DINERS",           // ✅ Correct
+      enabled: false,
+    },
+    PAYJUSTNOW: {
+      label: "PayJustNow",
+      rateExVat: parseFloat(process.env.PAYJUSTNOW_RATE_EX_VAT) || 0.0525,
+      min: 1250,
+      max: 100000,
+      tradeSafeCode: "PJN",              // ✅ Correct
+      enabled: false,
     },
   },
 };

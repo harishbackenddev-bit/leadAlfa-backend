@@ -11,7 +11,8 @@ const tradesafeService = require("./tradesafe.service");
 const AppError = require("../utils/appError");
 const BrandProfile = require('../models/brandProfile/brandProfile.model');
 const CreatorProfile = require('../models/creatorProfile/creatorProfile.model');
-const { generateEstimatedFundingQuote } = require("./fundingQuoteService");
+// Top pe import update karo
+const { generateFundingQuote } = require("./fundingQuoteService");
 
 const { PAYMENT_METHODS } = require("../config/tradesafeFees");
 // const CREATOR_COMMISSION_RATE = 0.20;
@@ -148,7 +149,10 @@ const syncAcceptedCreators = async (campaignId, brandId) => {
 // ============================================================
 
 
+
+
 const fundCampaign = async (campaignId, brandUserId, options = {}) => {
+  const { paymentMethod } = options;   // ✅ Accept paymentMethod
   const transaction = await sequelize.transaction();
 
   try {
@@ -158,10 +162,20 @@ const fundCampaign = async (campaignId, brandUserId, options = {}) => {
     });
     if (!campaign) throw new AppError("Campaign not found", 404);
 
-    // ✅ Allow retry for AWAITING_FUNDING / FUNDING_FAILED / UNFUNDED
+    // Allow retry
     const fundableStatuses = ['UNFUNDED', 'AWAITING_FUNDING', 'FUNDING_FAILED', 'PENDING_PAYMENT'];
     if (!fundableStatuses.includes(campaign.fundingStatus)) {
       throw new AppError(`Campaign cannot be funded in state: ${campaign.fundingStatus}`, 400);
+    }
+
+    // ✅ Require payment method
+    if (!paymentMethod) {
+      throw new AppError("Payment method required", 400);
+    }
+
+    const methodConfig = PAYMENT_METHODS[paymentMethod];
+    if (!methodConfig || !methodConfig.enabled) {
+      throw new AppError(`Invalid payment method: ${paymentMethod}`, 400);
     }
 
     const invoice = await Invoice.findOne({
@@ -175,15 +189,15 @@ const fundCampaign = async (campaignId, brandUserId, options = {}) => {
     const brandFeeCents = Math.round(parseFloat(invoice.serviceFeeAmount) * 100);
     const vatCents = Math.round(parseFloat(invoice.vatAmount || 0) * 100);
 
-    // ✅ Generate estimated fee quote (5.5% flat)
-    const quote = await generateEstimatedFundingQuote(campaign);
+    // ✅ Generate quote with payment method
+    const quote = await generateFundingQuote(campaign, paymentMethod);
     const tradeSafeFeeCents = Math.round(quote.tradesafeFeeInclVat * 100);
 
     const totalCents = baseTotalCents + tradeSafeFeeCents;
 
     if (totalCents <= 0) throw new AppError("Invoice amount invalid", 400);
 
-    // Brand
+    // Brand resolve
     const brandDetails = await BrandProfile.findByPk(campaign.brandId, {
       attributes: ["id", "userId", "companyEmail"],
       transaction,
@@ -203,16 +217,18 @@ const fundCampaign = async (campaignId, brandUserId, options = {}) => {
       throw new AppError("Brand not verified with TradeSafe", 400);
     }
 
-    // ✅ NO payment method restriction — TradeSafe handles all methods
+    // ✅ Restrict gateway on TradeSafe checkout
+    const tradeSafeCode = methodConfig.tradeSafeCode;
+
     const walletDeposit = await tradesafeService.tokenDeposit(brandTradeSafeUserId, {
       minutes: 60,
-      value: Math.ceil(totalCents / 100),   // ✅ Force amount
+      value: Math.ceil(totalCents / 100),
+      paymentMethods: [tradeSafeCode],   // ✅ LOCK selected gateway
     });
     if (!walletDeposit?.url) throw new AppError("Failed to generate wallet deposit link", 400);
 
     const reference = `CAMPAIGN-FUND-${campaign.publicId}-${Date.now()}`;
 
-    // Upsert FundingBatch
     let fundingBatch = await FundingBatch.findOne({
       where: { campaignId: campaign.id, type: 'CAMPAIGN_FUNDING' },
       transaction,
@@ -259,6 +275,7 @@ const fundCampaign = async (campaignId, brandUserId, options = {}) => {
       campaignId,
       campaignPublicId: campaign.publicId,
       invoicePublicId: invoice.publicId,
+      paymentMethod,
       financialSnapshot: {
         campaignValue: campaignBudgetCents / 100,
         brandFee: brandFeeCents / 100,

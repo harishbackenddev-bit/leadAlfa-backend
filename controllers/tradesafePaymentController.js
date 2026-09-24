@@ -13,11 +13,13 @@ const {
   getCreatorWalletBalance,
   withdrawCreatorFunds,
   getCreatorTransactionHistory,
-  cancelCreatorEscrow
+  cancelCreatorEscrow,
 } = require("../services/tradesafePaymentService");
 
+// ✅ Updated import — method-based quote
 const {
-  generateEstimatedFundingQuote,
+  generateFundingQuote,
+  getAvailablePaymentMethods,
 } = require("../services/fundingQuoteService");
 
 const FundingBatch = require("../models/transaction/fundingBatch.model");
@@ -40,12 +42,10 @@ const errResp = (res, err) => {
 const resolveCampaignId = async (identifier) => {
   if (!identifier) throw new AppError("Campaign identifier missing", 400);
 
-  // If numeric → return as integer
   if (/^\d+$/.test(String(identifier))) {
     return parseInt(identifier, 10);
   }
 
-  // If publicId (CMP-XXXX) → lookup
   const campaign = await Campaign.findOne({
     where: { publicId: identifier },
     attributes: ["id"],
@@ -78,19 +78,32 @@ const syncAcceptedCreatorsController = async (req, res) => {
 };
 
 // ============================================================
-// 3. FUND CAMPAIGN (wallet deposit link)
+// 3. FUND CAMPAIGN (wallet deposit link with payment method)
 // ============================================================
 const fundCampaignController = async (req, res) => {
   try {
     const campaignId = await resolveCampaignId(req.params.campaignId);
+    const { paymentMethod, quoteVersion } = req.body;
 
     console.log("📩 fundCampaign called:", {
       campaignId,
       brandId: req.brandId,
+      paymentMethod,
+      quoteVersion,
     });
 
-    // ✅ No payment method payload
-    const result = await fundCampaign(campaignId, req.brandId);
+    // ✅ Payment method REQUIRED
+    if (!paymentMethod) {
+      return res.status(400).json({
+        success: false,
+        error: "paymentMethod required in body",
+      });
+    }
+
+    const result = await fundCampaign(campaignId, req.brandId, {
+      paymentMethod,
+      quoteVersion,
+    });
 
     return res.status(201).json({ success: true, data: result });
   } catch (err) {
@@ -106,10 +119,10 @@ const simulateFundedController = async (req, res) => {
     const campaignId = await resolveCampaignId(req.params.campaignId);
 
     const fundingBatch = await FundingBatch.findOne({
-      where: { campaignId, type: 'CAMPAIGN_FUNDING' },
+      where: { campaignId, type: "CAMPAIGN_FUNDING" },
     });
     if (!fundingBatch) {
-      return res.status(404).json({ success: false, error: 'Funding batch not found' });
+      return res.status(404).json({ success: false, error: "Funding batch not found" });
     }
 
     const result = await simulateCampaignFundedSandbox(fundingBatch.id);
@@ -120,49 +133,42 @@ const simulateFundedController = async (req, res) => {
 // ============================================================
 // 5. SELECT CREATOR (create escrow)
 // ============================================================
-
-
 const selectCreatorController = async (req, res) => {
   try {
     const { creatorId } = req.body;
 
     if (!creatorId) {
-      return res.status(400).json({ success: false, error: 'creatorId required' });
+      return res.status(400).json({ success: false, error: "creatorId required" });
     }
 
     const campaignId = await resolveCampaignId(req.params.campaignId);
 
-    // ✅ Campaign ka data lo
     const campaign = await Campaign.findOne({
       where: { id: campaignId },
-      attributes: ['id', 'publicId', 'numberOfCreators', 'campaignBudgetCents', 'availableBudgetCents'],
+      attributes: ["id", "publicId", "numberOfCreators", "campaignBudgetCents", "availableBudgetCents"],
     });
 
     if (!campaign) {
-      return res.status(404).json({ success: false, error: 'Campaign not found' });
+      return res.status(404).json({ success: false, error: "Campaign not found" });
     }
 
-    // ✅ Per creator amount calculate karo
-    // Option A: numberOfCreators se divide karo
     let perCreatorAmount;
 
     const totalBudgetCents = campaign.campaignBudgetCents;
     const creatorCount = campaign.numberOfCreators || 1;
 
     if (totalBudgetCents > 0) {
-      // Campaign budget / numberOfCreators
-      perCreatorAmount = (totalBudgetCents / creatorCount) / 100;
+      perCreatorAmount = totalBudgetCents / creatorCount / 100;
     } else {
-      // Fallback: Invoice se lo
       const invoice = await CampaignInvoice.findOne({
         where: { campaignId: campaign.id },
-        attributes: ['cartSubtotal', 'numberOfCreators'],
+        attributes: ["cartSubtotal", "numberOfCreators"],
       });
 
       if (!invoice) {
         return res.status(400).json({
           success: false,
-          error: 'No campaign budget or invoice found',
+          error: "No campaign budget or invoice found",
         });
       }
 
@@ -173,11 +179,13 @@ const selectCreatorController = async (req, res) => {
     if (!perCreatorAmount || perCreatorAmount <= 0) {
       return res.status(400).json({
         success: false,
-        error: 'Could not calculate creator amount',
+        error: "Could not calculate creator amount",
       });
     }
 
-    console.log(`✅ Creator ${creatorId} amount: R${perCreatorAmount.toFixed(2)} (budget R${totalBudgetCents / 100} / ${creatorCount} creators)`);
+    console.log(
+      `✅ Creator ${creatorId} amount: R${perCreatorAmount.toFixed(2)} (budget R${totalBudgetCents / 100} / ${creatorCount} creators)`
+    );
 
     const result = await createCreatorEscrow(
       campaignId,
@@ -264,7 +272,6 @@ const releaseFundsToCreatorController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-
 // ============================================================
 // 11. GET CREATOR WALLET BALANCE
 // ============================================================
@@ -293,22 +300,25 @@ const withdrawCreatorFundsController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
+// ============================================================
+// 13. CREATOR TRANSACTION HISTORY
+// ============================================================
 const getCreatorTransactionHistoryController = async (req, res) => {
   try {
     const userId = req.user.id;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
-    const filter = req.query.filter || 'all';
+    const filter = req.query.filter || "all";
 
     const result = await getCreatorTransactionHistory(userId, { page, limit, filter });
     return res.status(200).json({ success: true, data: result });
   } catch (err) { return errResp(res, err); }
 };
 
-
-
-// ✅ NEW: Get estimated funding fee (no payment method)
-const getEstimatedFeeController = async (req, res) => {
+// ============================================================
+// 14. ✅ GET PAYMENT METHODS (for campaign amount)
+// ============================================================
+const getPaymentMethodsController = async (req, res) => {
   try {
     const campaignId = await resolveCampaignId(req.params.campaignId);
 
@@ -320,11 +330,63 @@ const getEstimatedFeeController = async (req, res) => {
       return res.status(404).json({ success: false, error: "Campaign not found" });
     }
 
-    const quote = await generateEstimatedFundingQuote(campaign);
+    // ✅ Fallback to invoice if campaignBudgetCents is 0
+    let campaignAmount = (campaign.campaignBudgetCents || 0) / 100;
+
+    if (campaignAmount <= 0) {
+      const invoice = await Invoice.findOne({
+        where: { campaignId: campaign.id },
+        attributes: ["cartSubtotal"],
+      });
+      if (invoice) {
+        campaignAmount = parseFloat(invoice.cartSubtotal || 0);
+      }
+    }
+
+    if (campaignAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Campaign amount not available. Please save the campaign first.",
+      });
+    }
+
+    const methods = getAvailablePaymentMethods(campaignAmount);
+
+    return res.status(200).json({
+      success: true,
+      data: { campaignAmount, currency: "ZAR", methods },
+    });
+  } catch (err) { return errResp(res, err); }
+};
+
+// ============================================================
+// 15. ✅ GENERATE FUNDING QUOTE (with payment method)
+// ============================================================
+const generateFundingQuoteController = async (req, res) => {
+  try {
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+    const { paymentMethod } = req.body;
+
+    if (!paymentMethod) {
+      return res.status(400).json({ success: false, error: "paymentMethod required" });
+    }
+
+    const campaign = await Campaign.findOne({
+      where: { id: campaignId, brandId: req.brandId, isDeleted: false },
+      attributes: ["id", "campaignBudgetCents"],
+    });
+    if (!campaign) {
+      return res.status(404).json({ success: false, error: "Campaign not found" });
+    }
+
+    const quote = await generateFundingQuote(campaign, paymentMethod);
     return res.status(200).json({ success: true, data: quote });
   } catch (err) { return errResp(res, err); }
 };
 
+// ============================================================
+// 16. CANCEL CREATOR ESCROW
+// ============================================================
 const cancelCreatorEscrowController = async (req, res) => {
   try {
     const { creatorId, reason } = req.body;
@@ -346,8 +408,6 @@ const cancelCreatorEscrowController = async (req, res) => {
   }
 };
 
-
-
 module.exports = {
   getAcceptedCreatorsController,
   syncAcceptedCreatorsController,
@@ -362,6 +422,7 @@ module.exports = {
   getCreatorBalanceController,
   withdrawCreatorFundsController,
   getCreatorTransactionHistoryController,
-  getEstimatedFeeController,
-  cancelCreatorEscrowController
+  getPaymentMethodsController,
+  generateFundingQuoteController,
+  cancelCreatorEscrowController,
 };
