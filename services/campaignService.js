@@ -588,6 +588,12 @@ const getPublicActiveCampaigns = async (page = 1, limit = 10) => {
         (m) => m.usageType === CAMPAIGN_MEDIA_TYPES.MOODBOARDS,
       ) || [];
 
+    // ✅ Sirf ye calculate karo
+    const creatorAmount =
+      invoice?.cartSubtotal && campaign.numberOfCreators
+        ? parseFloat(invoice.cartSubtotal) / campaign.numberOfCreators
+        : null;
+
     return {
       ...rest,
       media: {
@@ -597,6 +603,8 @@ const getPublicActiveCampaigns = async (page = 1, limit = 10) => {
       creatorVisibleBudget: invoice?.cartSubtotal
         ? parseFloat(invoice.cartSubtotal)
         : null,
+      // ✅ Sirf ye 1 line add hui
+      creatorAmount,
     };
   });
 
