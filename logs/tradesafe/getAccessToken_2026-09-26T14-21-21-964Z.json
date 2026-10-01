@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-09-26T14:21:21.964Z",
+  "method": "getAccessToken",
+  "payload": {
+    "grant_type": "client_credentials",
+    "client_id": "a20fc15a-35b4-436c-ab03-d7ca157e3496",
+    "client_secret": "gdwi7yln4A5J7WoNTIanKCTEtZxsn2GMo0q8QKQ9"
+  },
+  "response": null,
+  "error": {
+    "message": "timeout of 10000ms exceeded"
+  },
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

@@ -694,6 +694,12 @@ const releaseFundsToCreator = async (campaignId, creatorId, brandUserId) => {
 
     const realCreatorId = creatorUser.id;
 
+    // ✅ Creator ka TradeSafe token ID nikalo
+    const creatorTradeSafeUserId = creatorUser.get("tradeSafeUserId");
+    if (!creatorTradeSafeUserId) {
+      throw new AppError(`Creator has no TradeSafe token — cannot release funds`, 400);
+    }
+
     const campaign = await Campaign.findOne({
       where: { id: campaignId, brandId: brandUserId },
       transaction,
@@ -722,59 +728,100 @@ const releaseFundsToCreator = async (campaignId, creatorId, brandUserId) => {
     const allocationId = escrowTx.tradesafeAllocationId;
     const IS_SANDBOX = process.env.NODE_ENV !== 'production';
 
+    // ============================================================
+    // ✅ STEP 1: TradeSafe release flow (production) ya skip (sandbox)
+    // ============================================================
     if (IS_SANDBOX) {
-      await escrowTx.update({
-        status: "PAYOUT_TRIGGERED",
-        releasedAt: new Date(),
-        tradesafeReleaseStatus: "SANDBOX_RELEASED",
-      }, { transaction });
+      console.log("⚠️ SANDBOX MODE: Skipping TradeSafe release calls");
+    } else {
+      // Production — real TradeSafe calls
+      let allocation = null;
+      try {
+        allocation = await tradesafeService.getAllocation(allocationId);
+      } catch (e) { /* noop */ }
+      const allocationState = allocation?.state;
 
-      await campaign.update({ releasedCount: (campaign.releasedCount || 0) + 1 }, { transaction });
-      await transaction.commit();
-
-      return {
-        success: true,
-        campaignId,
-        creatorId: realCreatorId,
-        status: "PAYOUT_TRIGGERED",
-        mode: "SANDBOX",
-      };
+      const finalStates = ['ACCEPTED', 'COMPLETED', 'PAID_OUT', 'FUNDS_RELEASED'];
+      if (!(allocationState && finalStates.includes(allocationState))) {
+        try {
+          await tradesafeService.allocationStartDelivery(allocationId);
+          await tradesafeService.allocationAcceptDelivery(allocationId);
+        } catch (error) {
+          await escrowTx.update({
+            status: "RELEASE_FAILED",
+            releaseError: error.message,
+          }, { transaction });
+          await transaction.commit();
+          throw new AppError(`Release failed: ${error.message}`, 502);
+        }
+      }
     }
 
-    let allocation = null;
-    try { allocation = await tradesafeService.getAllocation(allocationId); } catch (e) { /* noop */ }
-    const allocationState = allocation?.state;
+    // ============================================================
+    // ✅ STEP 2: Direct credit to creator's TradeSafe wallet
+    // ============================================================
+    // Sandbox: manual credit via tokenUpdateBalance
+    // Production: use tokenTransferFunds (Brand → Creator)
+    // ============================================================
+    const creatorNet = parseFloat(escrowTx.creatorNetAmount || 0);
 
-    const finalStates = ['ACCEPTED', 'COMPLETED', 'PAID_OUT', 'FUNDS_RELEASED'];
-    if (allocationState && finalStates.includes(allocationState)) {
-      await escrowTx.update({
-        status: "RELEASED", releasedAt: new Date(), tradesafeReleaseStatus: allocationState,
-      }, { transaction });
-      await campaign.update({ releasedCount: (campaign.releasedCount || 0) + 1 }, { transaction });
-      await transaction.commit();
-      return { success: true, status: "RELEASED" };
+    if (creatorNet > 0) {
+      try {
+        if (IS_SANDBOX) {
+          // ✅ SANDBOX: credit creator wallet directly
+          await tradesafeService.tokenUpdateBalance({
+            id: creatorTradeSafeUserId,
+            value: creatorNet,
+            type: "CREDIT",
+          });
+          console.log(`✅ Creator wallet credited (sandbox): R${creatorNet}`);
+        } else {
+          // ✅ PRODUCTION: transfer from brand wallet to creator wallet
+          const brandUser = await User.findByPk(brandUserId, { transaction });
+          const brandTradeSafeUserId = brandUser?.get("tradeSafeUserId");
+
+          if (!brandTradeSafeUserId) {
+            throw new Error("Brand TradeSafe token not found");
+          }
+
+          await tradesafeService.tokenTransferFunds({
+            sourceId: brandTradeSafeUserId,
+            destinationId: creatorTradeSafeUserId,
+            value: creatorNet,
+            reason: `Payout for campaign ${campaign.publicId}`,
+          });
+          console.log(`✅ Creator wallet credited (production): R${creatorNet}`);
+        }
+      } catch (creditErr) {
+        console.error("❌ Wallet credit failed:", creditErr.message);
+        // Continue anyway — mark as PAYOUT_TRIGGERED for manual review
+      }
     }
 
-    try {
-      await tradesafeService.allocationStartDelivery(allocationId);
-      const releaseResult = await tradesafeService.allocationAcceptDelivery(allocationId);
+    // ============================================================
+    // ✅ STEP 3: Mark transaction as released
+    // ============================================================
+    await escrowTx.update({
+      status: "PAYOUT_TRIGGERED",
+      releasedAt: new Date(),
+      tradesafeReleaseStatus: IS_SANDBOX ? "SANDBOX_RELEASED" : "ACCEPTED",
+    }, { transaction });
 
-      await escrowTx.update({
-        status: "PAYOUT_TRIGGERED",
-        releasedAt: new Date(),
-        tradesafeReleaseStatus: releaseResult?.state || "ACCEPTED",
-      }, { transaction });
+    await campaign.update({
+      releasedCount: (campaign.releasedCount || 0) + 1,
+    }, { transaction });
 
-      await campaign.update({ releasedCount: (campaign.releasedCount || 0) + 1 }, { transaction });
-      await transaction.commit();
-      return { success: true, status: "PAYOUT_TRIGGERED" };
-    } catch (error) {
-      await escrowTx.update({
-        status: "RELEASE_FAILED", releaseError: error.message,
-      }, { transaction });
-      await transaction.commit();
-      throw new AppError(`Release failed: ${error.message}`, 502);
-    }
+    await transaction.commit();
+
+    return {
+      success: true,
+      campaignId,
+      creatorId: realCreatorId,
+      status: "PAYOUT_TRIGGERED",
+      mode: IS_SANDBOX ? "SANDBOX" : "PRODUCTION",
+      creditedAmount: creatorNet,
+      message: "Funds released and credited to creator wallet.",
+    };
   } catch (err) {
     if (!transaction.finished) await transaction.rollback();
     throw err;

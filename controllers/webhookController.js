@@ -9,52 +9,52 @@ const handleTradeSafeWebhook = async (req, res) => {
     console.log(`📩 TradeSafe webhook:`, event);
 
     switch (event) {
-case 'FUNDS_RECEIVED': {
-  const walletTokenId = data?.tokenId;
+      case 'FUNDS_RECEIVED': {
+        const walletTokenId = data?.tokenId;
 
-  console.log('FUNDS_RECEIVED webhook:', { walletTokenId, data });
+        console.log('FUNDS_RECEIVED webhook:', { walletTokenId, data });
 
-  if (!walletTokenId) {
-    console.warn('⚠️ No tokenId provided');
-    return res.status(200).json({ received: true });
-  }
+        if (!walletTokenId) {
+          console.warn('⚠️ No tokenId provided');
+          return res.status(200).json({ received: true });
+        }
 
-  // ✅ DEBUG: Find ALL batches for this token (no filter)
-  const allBatches = await FundingBatch.findAll({
-    where: {
-      tradesafeWalletTokenId: walletTokenId,
-    },
-    attributes: ['id', 'campaignId', 'type', 'status', 'totalValue', 'createdAt'],
-    order: [['createdAt', 'DESC']],
-  });
+        // ✅ DEBUG: Find ALL batches for this token (no filter)
+        const allBatches = await FundingBatch.findAll({
+          where: {
+            tradesafeWalletTokenId: walletTokenId,
+          },
+          attributes: ['id', 'campaignId', 'type', 'status', 'totalValue', 'createdAt'],
+          order: [['createdAt', 'DESC']],
+        });
 
-  console.log(`📊 Found ${allBatches.length} batches for token ${walletTokenId}:`);
-  allBatches.forEach((b) => {
-    console.log(`   - id: ${b.id}`);
-    console.log(`     campaignId: ${b.campaignId}`);
-    console.log(`     type: ${b.type} (type of: ${typeof b.type})`);
-    console.log(`     status: ${b.status} (type of: ${typeof b.status})`);
-    console.log(`     totalValue: ${b.totalValue}`);
-    console.log(`     createdAt: ${b.createdAt}`);
-  });
+        console.log(`📊 Found ${allBatches.length} batches for token ${walletTokenId}:`);
+        allBatches.forEach((b) => {
+          console.log(`   - id: ${b.id}`);
+          console.log(`     campaignId: ${b.campaignId}`);
+          console.log(`     type: ${b.type} (type of: ${typeof b.type})`);
+          console.log(`     status: ${b.status} (type of: ${typeof b.status})`);
+          console.log(`     totalValue: ${b.totalValue}`);
+          console.log(`     createdAt: ${b.createdAt}`);
+        });
 
-  // ✅ Now try PENDING only
-  const pendingBatches = allBatches.filter((b) => b.status === 'PENDING_PAYMENT');
-  console.log(`📊 PENDING batches: ${pendingBatches.length}`);
+        // ✅ Now try PENDING only
+        const pendingBatches = allBatches.filter((b) => b.status === 'PENDING_PAYMENT');
+        console.log(`📊 PENDING batches: ${pendingBatches.length}`);
 
-  if (pendingBatches.length === 0) {
-    console.warn(`⚠️ No PENDING batch — available statuses:`, allBatches.map(b => b.status));
-    return res.status(200).json({ received: true });
-  }
+        if (pendingBatches.length === 0) {
+          console.warn(`⚠️ No PENDING batch — available statuses:`, allBatches.map(b => b.status));
+          return res.status(200).json({ received: true });
+        }
 
-  const batch = pendingBatches[0]; // Latest one
-  console.log(`✅ Using batch: ${batch.id}`);
+        const batch = pendingBatches[0]; // Latest one
+        console.log(`✅ Using batch: ${batch.id}`);
 
-  await confirmCampaignFunded(batch.id);
-  console.log(`✅ Campaign funded: ${batch.campaignId}`);
+        await confirmCampaignFunded(batch.id);
+        console.log(`✅ Campaign funded: ${batch.campaignId}`);
 
-  break;
-}
+        break;
+      }
 
       case 'PAYOUT_COMPLETED': {
         const tsTxId = data?.transactionId;

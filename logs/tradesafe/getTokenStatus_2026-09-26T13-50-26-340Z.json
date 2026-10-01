@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-09-26T13:50:26.340Z",
+  "method": "getTokenStatus",
+  "payload": {
+    "tokenId": "34VXheA1Mf0wein3WEuWe"
+  },
+  "response": {
+    "token": {
+      "id": "34VXheA1Mf0wein3WEuWe",
+      "name": "test company (Pty) Ltd",
+      "reference": "SIT-X6R9QTPG",
+      "user": {
+        "givenName": "test",
+        "familyName": "brand",
+        "email": "testbrand@gmail.com",
+        "mobile": "+27821234567"
+      },
+      "organization": {
+        "name": "test company",
+        "type": "PRIVATE",
+        "registration": "2000/123456/07",
+        "taxNumber": "1234567890"
+      },
+      "balance": 0
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

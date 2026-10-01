@@ -1,0 +1,25 @@
+{
+  "timestamp": "2026-09-26T13:53:06.697Z",
+  "method": "getTokenStatus",
+  "payload": {
+    "tokenId": "34VXsCkh3vK1QCgmuYSbn"
+  },
+  "response": {
+    "token": {
+      "id": "34VXsCkh3vK1QCgmuYSbn",
+      "name": "first creator",
+      "reference": "SIT-X4BJ28KC",
+      "user": {
+        "givenName": "first",
+        "familyName": "creator",
+        "email": "creator1@gmail.com",
+        "mobile": "+27821234567"
+      },
+      "organization": null,
+      "balance": 0
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

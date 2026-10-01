@@ -1,0 +1,15 @@
+{
+  "timestamp": "2026-09-26T13:44:48.854Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      query organizations {\n        organizations { id name type registration taxNumber status }\n      }\n    ",
+    "variables": {}
+  },
+  "response": null,
+  "error": {
+    "message": "Cannot query field \"organizations\" on type \"Query\". Did you mean \"transactions\" or \"transaction\"?",
+    "stack": "Error: Cannot query field \"organizations\" on type \"Query\". Did you mean \"transactions\" or \"transaction\"?\n    at TradeSafeService._executeQuery (/var/www/html/Node_projects/creatrend-backend/services/tradesafe.service.js:104:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async TradeSafeService.getOrganizations (/var/www/html/Node_projects/creatrend-backend/services/tradesafe.service.js:236:20)\n    at async registerBrandWithTradeSafe (/var/www/html/Node_projects/creatrend-backend/services/tradesafeBrandService.js:90:20)\n    at async registerBrand (/var/www/html/Node_projects/creatrend-backend/controllers/tradesafeRegistrationController.js:124:29)"
+  },
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

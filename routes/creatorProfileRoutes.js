@@ -35,7 +35,7 @@ const creatorMediaConfig = {
     allowedTypes: ["application/pdf"],
     maxSize: 10 * 1024 * 1024 // 10MB
   },
-  portfolio: {
+  introVideo: {
     maxCount: 15,
     allowedTypes: ["video/mp4", "video/quicktime", "application/octet-stream"], // .mp4 and .mov
     maxSize: 100 * 1024 * 1024 // 100MB per file

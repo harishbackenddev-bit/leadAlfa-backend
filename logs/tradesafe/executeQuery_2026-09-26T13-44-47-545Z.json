@@ -1,0 +1,43 @@
+{
+  "timestamp": "2026-09-26T13:44:47.545Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      mutation tokenCreate($input: TokenInput!) {\n        tokenCreate(input: $input) {\n          id\n          name\n          reference\n        }\n      }\n    ",
+    "variables": {
+      "input": {
+        "user": {
+          "givenName": "test",
+          "familyName": "brand",
+          "email": "testbrand@gmail.com",
+          "mobile": "+27821234567",
+          "idNumber": "",
+          "idType": "NATIONAL",
+          "idCountry": "ZAF"
+        },
+        "organization": {
+          "name": "test company",
+          "type": "PRIVATE",
+          "registrationNumber": "2000/123456/07",
+          "taxNumber": "1234567890"
+        },
+        "bankAccount": {
+          "bank": "CAPITEC",
+          "accountNumber": "876523",
+          "accountType": "CHEQUE"
+        }
+      }
+    }
+  },
+  "response": {
+    "data": {
+      "tokenCreate": {
+        "id": "34VXheA1Mf0wein3WEuWe",
+        "name": "test company (Pty) Ltd",
+        "reference": "SIT-X6R9QTPG"
+      }
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

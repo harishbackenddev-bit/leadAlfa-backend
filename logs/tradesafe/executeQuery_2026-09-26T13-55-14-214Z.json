@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-09-26T13:55:14.214Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      query getToken($tokenId: ID!) {\n        token(id: $tokenId) {\n          id\n          name\n          reference\n          user { givenName familyName email mobile }\n          organization { name type registration taxNumber }\n          balance\n        }\n      }\n    ",
+    "variables": {
+      "tokenId": "34VXugtLqFhi6HKlgUA1z"
+    }
+  },
+  "response": {
+    "data": {
+      "token": {
+        "id": "34VXugtLqFhi6HKlgUA1z",
+        "name": "second creator",
+        "reference": "SIT-XFX9P47K",
+        "user": {
+          "givenName": "second",
+          "familyName": "creator",
+          "email": "creator2@gmail.com",
+          "mobile": "+27821234567"
+        },
+        "organization": null,
+        "balance": 0
+      }
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

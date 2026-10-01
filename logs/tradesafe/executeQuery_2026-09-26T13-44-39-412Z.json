@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-09-26T13:44:39.412Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      mutation tokenCreate($input: TokenInput!) {\n        tokenCreate(input: $input) {\n          id\n          name\n          reference\n        }\n      }\n    ",
+    "variables": {
+      "input": {
+        "user": {
+          "givenName": "test",
+          "familyName": "brand",
+          "email": "testbrand@gmail.com",
+          "mobile": "+27821234567",
+          "idNumber": "",
+          "idType": "NATIONAL",
+          "idCountry": "ZAF"
+        },
+        "organization": {
+          "name": "test company",
+          "type": "PRIVATE",
+          "registrationNumber": "2000/123456/07",
+          "taxNumber": "1234567890"
+        },
+        "bankAccount": {
+          "bank": "STANDARD_BANK",
+          "accountNumber": "876523",
+          "accountType": "CHEQUE"
+        }
+      }
+    }
+  },
+  "response": null,
+  "error": {
+    "message": "Variable \"$input\" got invalid value \"STANDARD_BANK\" at \"input.bankAccount.bank\"; Value \"STANDARD_BANK\" does not exist in \"UniversalBranchCode\" enum.",
+    "stack": "Error: Variable \"$input\" got invalid value \"STANDARD_BANK\" at \"input.bankAccount.bank\"; Value \"STANDARD_BANK\" does not exist in \"UniversalBranchCode\" enum.\n    at TradeSafeService._executeQuery (/var/www/html/Node_projects/creatrend-backend/services/tradesafe.service.js:104:15)\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async TradeSafeService.registerBrand (/var/www/html/Node_projects/creatrend-backend/services/tradesafe.service.js:204:20)\n    at async registerBrandWithTradeSafe (/var/www/html/Node_projects/creatrend-backend/services/tradesafeBrandService.js:75:20)\n    at async registerBrand (/var/www/html/Node_projects/creatrend-backend/controllers/tradesafeRegistrationController.js:124:29)"
+  },
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

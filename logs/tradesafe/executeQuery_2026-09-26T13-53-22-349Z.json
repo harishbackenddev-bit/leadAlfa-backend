@@ -1,0 +1,28 @@
+{
+  "timestamp": "2026-09-26T13:53:22.349Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      query organizations {\n        organizations { id name type registration taxNumber status }\n      }\n    ",
+    "variables": {}
+  },
+  "response": {
+    "errors": [
+      {
+        "message": "Cannot query field \"organizations\" on type \"Query\". Did you mean \"transactions\" or \"transaction\"?",
+        "locations": [
+          {
+            "line": 2,
+            "column": 9
+          }
+        ],
+        "extensions": {
+          "file": "/var/task/vendor/webonyx/graphql-php/src/Validator/Rules/FieldsOnCorrectType.php",
+          "line": 43
+        }
+      }
+    ]
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}

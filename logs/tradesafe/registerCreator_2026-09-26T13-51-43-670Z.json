@@ -1,0 +1,30 @@
+{
+  "timestamp": "2026-09-26T13:51:43.670Z",
+  "method": "registerCreator",
+  "payload": {
+    "user": {
+      "givenName": "first",
+      "familyName": "creator",
+      "email": "creator1@gmail.com",
+      "mobile": "+27821234567",
+      "idNumber": "9106070000084",
+      "idType": "NATIONAL",
+      "idCountry": "ZAF"
+    },
+    "bankAccount": {
+      "bank": "AFRICAN",
+      "accountNumber": "876432",
+      "accountType": "SAVINGS"
+    }
+  },
+  "response": {
+    "tokenCreate": {
+      "id": "34VXsCkh3vK1QCgmuYSbn",
+      "name": "first creator",
+      "reference": "SIT-X4BJ28KC"
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}
