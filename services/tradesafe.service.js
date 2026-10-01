@@ -562,49 +562,6 @@ class TradeSafeService {
   }
 
 
-
-  // ========== TOKEN TRANSFER FUNDS ==========
-  async tokenTransferFunds({ sourceId, destinationId, value, reason = "" }) {
-    console.log("💰 tokenTransferFunds STARTED");
-    console.log("   Source ID:", sourceId);
-    console.log("   Destination ID:", destinationId);
-    console.log("   Value:", value);
-
-    const mutation = `
-    mutation tokenTransferFunds(
-      $sourceId: ID!
-      $destinationId: ID!
-      $value: Float!
-      $reason: String
-    ) {
-      tokenTransferFunds(
-        sourceId: $sourceId
-        destinationId: $destinationId
-        value: $value
-        reason: $reason
-      )
-    }
-  `;
-
-    const variables = {
-      sourceId,
-      destinationId,
-      value,
-      reason,
-    };
-
-    try {
-      const result = await this._executeQuery(mutation, variables);
-      this._logApiCall('tokenTransferFunds', variables, result);
-      console.log("✅ tokenTransferFunds COMPLETED");
-      return result.tokenTransferFunds;
-    } catch (error) {
-      console.error("❌ tokenTransferFunds failed:", error.message);
-      throw error;
-    }
-  }
-
-
 }
 
 module.exports = new TradeSafeService();
