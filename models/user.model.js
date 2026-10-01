@@ -14,7 +14,6 @@ const User = sequelize.define("User", {
   },
   lastName: {
     type: DataTypes.STRING,
-    // allowNull defaults to true
   },
   phone: {
     type: DataTypes.STRING,
@@ -67,6 +66,28 @@ const User = sequelize.define("User", {
   passwordChangedAt: {
     type: DataTypes.DATE,
     allowNull: true,
+  },
+
+  // ✅ NEW — match the migration
+  tradeSafeUserId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  tradeSafeReference: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  tradeSafeStatus: {
+    type: DataTypes.ENUM("PENDING", "VERIFIED", "FAILED"),
+    defaultValue: "PENDING",
+  },
+  kycStatus: {
+    type: DataTypes.ENUM("NOT_SUBMITTED", "SUBMITTED", "VERIFIED", "REJECTED"),
+    defaultValue: "NOT_SUBMITTED",
+  },
+  bankVerificationStatus: {
+    type: DataTypes.ENUM("NOT_SUBMITTED", "PENDING", "VERIFIED", "FAILED"),
+    defaultValue: "NOT_SUBMITTED",
   },
 });
 
