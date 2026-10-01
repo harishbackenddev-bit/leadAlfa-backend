@@ -694,6 +694,8 @@ const releaseFundsToCreator = async (campaignId, creatorId, brandUserId) => {
 
     const realCreatorId = creatorUser.id;
 
+    console.log("creatorUser",creatorUser);
+
     // ✅ FIX: Creator ka TradeSafe token ID yahan declare karo
     const creatorTradeSafeUserId = creatorUser.get("tradeSafeUserId");
     if (!creatorTradeSafeUserId) {
