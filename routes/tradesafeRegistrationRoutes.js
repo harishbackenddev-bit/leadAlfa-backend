@@ -3,13 +3,16 @@ const express = require("express");
 const router = express.Router();
 const { authenticateJWT } = require("../middlewares/authMiddleware");
 const { allowRoles } = require("../middlewares/roleMiddleware");
+const bankChangeController = require("../controllers/bankChangeController");
 const {
   registerCreator,
   registerBrand,
   getTradeSafeStatus,
 } = require("../controllers/tradesafeRegistrationController");
 
-// Creator registration
+// ============================================================
+// CREATOR REGISTRATION
+// ============================================================
 router.post(
   "/register/creator",
   authenticateJWT,
@@ -17,7 +20,9 @@ router.post(
   registerCreator
 );
 
-// Brand registration
+// ============================================================
+// BRAND REGISTRATION
+// ============================================================
 router.post(
   "/register/brand",
   authenticateJWT,
@@ -25,11 +30,33 @@ router.post(
   registerBrand
 );
 
-// Get TradeSafe status
+// ============================================================
+// TRADESAFE STATUS
+// ============================================================
 router.get(
   "/status",
   authenticateJWT,
   getTradeSafeStatus
+);
+
+// ============================================================
+// BANK CHANGE REQUEST — Creator only
+// ============================================================
+
+
+router.post(
+  "/bank-change-request",
+  authenticateJWT,
+  allowRoles("creator"),
+  bankChangeController.createBankChangeRequest
+);
+
+
+router.get(
+  "/bank-change-request",
+  authenticateJWT,
+  allowRoles("creator"),
+  bankChangeController.getMyBankChangeRequests
 );
 
 module.exports = router;

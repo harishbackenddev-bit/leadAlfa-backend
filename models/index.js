@@ -36,6 +36,7 @@ const UserFeedback = require("./userFeedback.model");
 // ✅ ADD THESE TWO
 const Transaction = require("./transaction/transaction.model");
 const FundingBatch = require("./transaction/fundingBatch.model");
+const BankChangeRequest = require('./bankChangeRequest.model');
 
 const db = {
   sequelize,
@@ -71,9 +72,9 @@ const db = {
   ContactRequest,
   BookCallRequest,
   UserFeedback,
-  // ✅ ADD THESE
   Transaction,
   FundingBatch,
+  BankChangeRequest,
 };
 
 Object.keys(db).forEach((modelName) => {
