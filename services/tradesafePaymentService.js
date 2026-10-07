@@ -1,6 +1,6 @@
 // services/tradesafePaymentService.js
 const { sequelize } = require("../config/database");
-const { Op, fn, col, where, QueryTypes } = require("sequelize");
+const { Op, fn, col, where, QueryTypes, literal } = require("sequelize");
 const Campaign = require("../models/campaigns/campaign.model");
 const CampaignApplication = require("../models/campaigns/campaignApplication.model");
 const Invoice = require("../models/campaigns/campaignInvoice.model");
