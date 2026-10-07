@@ -1092,7 +1092,9 @@ const getCreatorTransactionHistory = async (userId, { page = 1, limit = 10, filt
         attributes: ['id', 'firstName', 'lastName', 'email'],
       },
     ],
-    order: [['createdAt', 'DESC']],
+    order: [
+      [literal('COALESCE("Transaction"."fundedAt", "Transaction"."createdAt") DESC')],
+    ],
     limit,
     offset,
   });
