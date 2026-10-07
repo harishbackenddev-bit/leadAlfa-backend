@@ -1,6 +1,7 @@
 require("dotenv").config();
 require('./models'); // Ensure models are loaded
 require('./cron/socialProfileSync.cron');
+require('./cron/autoApproveSubmissions'); 
 const express = require("express");
 const http = require('http');
 const cookieParser = require("cookie-parser");
@@ -108,6 +109,7 @@ async function runMigrations() {
     // Start Socket.IO server by passing the HTTP server
     const { io, pubClient, subClient } = await startSocketServer(server);
     app.set("io", io);
+    global.__IO__ = io;
     console.log("Socket.IO server started and attached to HTTP server.");
 
     // Start HTTP server (which handles both Express and Socket.IO)

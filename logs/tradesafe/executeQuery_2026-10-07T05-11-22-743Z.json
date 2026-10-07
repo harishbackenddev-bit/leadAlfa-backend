@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-10-07T05:11:22.743Z",
+  "method": "executeQuery",
+  "payload": {
+    "query": "\n      mutation tokenUpdateBalance($id: ID!, $value: Float!, $type: TransactionType!) {\n        tokenUpdateBalance(id: $id, value: $value, type: $type) {\n          id\n          balance\n        }\n      }\n    ",
+    "variables": {
+      "id": "34L40pDZS32ngzhHEZTbZ",
+      "value": 1300,
+      "type": "CREDIT"
+    }
+  },
+  "response": {
+    "data": {
+      "tokenUpdateBalance": {
+        "id": "34L40pDZS32ngzhHEZTbZ",
+        "balance": 3328
+      }
+    }
+  },
+  "error": null,
+  "environment": "development",
+  "apiUrl": "https://api-developer.tradesafe.dev/graphql"
+}
