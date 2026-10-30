@@ -171,9 +171,7 @@ const Campaign = sequelize.define(
       validate: { isUrl: true },
     },
 
-    // ============================================================
-    // ✅ NEW: Campaign Funding Fields
-    // ============================================================
+
     fundingStatus: {
       type: DataTypes.ENUM(
         "UNFUNDED",

@@ -68,7 +68,7 @@ const User = sequelize.define("User", {
     allowNull: true,
   },
 
-  // ✅ NEW — match the migration
+
   tradeSafeUserId: {
     type: DataTypes.STRING,
     allowNull: true,

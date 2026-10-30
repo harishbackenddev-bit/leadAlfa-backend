@@ -8,7 +8,7 @@ const BankChangeRequest = sequelize.define("BankChangeRequest", {
     primaryKey: true,
   },
 
-  // ========== USER IDENTIFICATION (email-based) ==========
+
   email: {
     type: DataTypes.STRING(255),
     allowNull: false,
@@ -17,7 +17,7 @@ const BankChangeRequest = sequelize.define("BankChangeRequest", {
   },
   userId: {
     type: DataTypes.INTEGER,
-    allowNull: true,       // 🔥 optional — email से lookup होगा
+    allowNull: true,  
     comment: 'Optional user reference (resolved from email)',
   },
 
@@ -35,7 +35,7 @@ const BankChangeRequest = sequelize.define("BankChangeRequest", {
     allowNull: true,
   },
 
-  // ========== REQUEST DETAILS ==========
+
   reason: {
     type: DataTypes.STRING(500),
     allowNull: false,
@@ -45,7 +45,7 @@ const BankChangeRequest = sequelize.define("BankChangeRequest", {
     allowNull: false,
   },
 
-  // ========== STATUS ==========
+
   status: {
     type: DataTypes.ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'),
     defaultValue: 'PENDING',
@@ -65,7 +65,7 @@ const BankChangeRequest = sequelize.define("BankChangeRequest", {
     allowNull: true,
   },
 
-  // ========== AVS (TradeSafe re-verification) ==========
+
   avsStatus: {
     type: DataTypes.ENUM('PENDING', 'VERIFIED', 'FAILED', 'SKIPPED'),
     defaultValue: 'PENDING',
@@ -76,7 +76,7 @@ const BankChangeRequest = sequelize.define("BankChangeRequest", {
     allowNull: true,
   },
 
-  // ========== AUDIT ==========
+
   ipAddress: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -96,7 +96,7 @@ const BankChangeRequest = sequelize.define("BankChangeRequest", {
   ],
 });
 
-// ========== INSTANCE METHODS ==========
+
 BankChangeRequest.prototype.isPending = function () {
   return this.status === 'PENDING';
 };
@@ -105,7 +105,7 @@ BankChangeRequest.prototype.canReview = function () {
   return this.status === 'PENDING';
 };
 
-// ========== CLASS METHODS ==========
+
 BankChangeRequest.findPendingByEmail = async function (email) {
   return this.findOne({
     where: { email, status: 'PENDING' },

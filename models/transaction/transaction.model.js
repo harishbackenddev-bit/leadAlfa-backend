@@ -1,4 +1,3 @@
-// models/transaction.model.js
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../../config/database');
 
@@ -9,7 +8,6 @@ const Transaction = sequelize.define('Transaction', {
     primaryKey: true,
   },
 
-  // ========== CAMPAIGN RELATIONS ==========
   campaignId: {
     type: DataTypes.INTEGER,
     allowNull: false,
@@ -35,7 +33,7 @@ const Transaction = sequelize.define('Transaction', {
     },
   },
 
-  // ========== FUNDING BATCH ==========
+
   fundingBatchId: {
     type: DataTypes.UUID,
     allowNull: true,
@@ -45,7 +43,7 @@ const Transaction = sequelize.define('Transaction', {
     },
   },
 
-  // ========== FINANCIAL - BASIC ==========
+
   amount: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false,
@@ -57,8 +55,7 @@ const Transaction = sequelize.define('Transaction', {
     defaultValue: 0,
   },
 
-  // ========== FINANCIAL - FEES ==========
-  // Creatrend Commission (20%)
+
   commissionAmount: {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0,
@@ -68,7 +65,7 @@ const Transaction = sequelize.define('Transaction', {
     defaultValue: 0,
   },
 
-  // Brand Service Fee (5%)
+
   brandServiceFeeAmount: {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0,
@@ -88,7 +85,7 @@ const Transaction = sequelize.define('Transaction', {
     defaultValue: 0,
   },
 
-  // Brand Contribution (Creator Net + Creatrend Combined)
+
   brandContributionAmount: {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0,
@@ -98,7 +95,7 @@ const Transaction = sequelize.define('Transaction', {
     defaultValue: 0,
   },
 
-  // Creator Net (80%)
+
   creatorNetAmount: {
     type: DataTypes.DECIMAL(10, 2),
     defaultValue: 0,
@@ -118,7 +115,7 @@ const Transaction = sequelize.define('Transaction', {
     defaultValue: 0,
   },
 
-  // ========== ✅ NEW: RESERVATION FIELDS ==========
+ 
   reservationStatus: {
     type: DataTypes.ENUM('RESERVED', 'COMMITTED', 'RELEASED', 'REFUNDED'),
     defaultValue: 'RESERVED',
@@ -132,7 +129,7 @@ const Transaction = sequelize.define('Transaction', {
     comment: "Amount reserved/committed from the parent campaign budget for this creator.",
   },
 
-  // ========== TRADESAFE IDs ==========
+ 
   tradesafeTransactionId: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -146,7 +143,7 @@ const Transaction = sequelize.define('Transaction', {
     allowNull: true,
   },
 
-  // ========== TRADESAFE FUNDING STATUS ==========
+ 
   tradesafeFundingStatus: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -156,7 +153,7 @@ const Transaction = sequelize.define('Transaction', {
     allowNull: true,
   },
 
-  // ========== FUNDING TRACKING ==========
+ 
   fundedAt: {
     type: DataTypes.DATE,
     allowNull: true,
@@ -170,7 +167,7 @@ const Transaction = sequelize.define('Transaction', {
     allowNull: true,
   },
 
-  // ========== STATUS ==========
+ 
   status: {
     type: DataTypes.ENUM(
       'CREATED',
@@ -203,7 +200,7 @@ const Transaction = sequelize.define('Transaction', {
   approvedAt: { type: DataTypes.DATE, allowNull: true },
   reviewedAt: { type: DataTypes.DATE, allowNull: true },
 
-  // ========== TRACKING ==========
+
   reference: {
     type: DataTypes.STRING,
     allowNull: true,
@@ -213,14 +210,14 @@ const Transaction = sequelize.define('Transaction', {
     allowNull: true,
   },
 
-  // ========== METADATA ==========
+
   metadata: {
     type: DataTypes.JSON,
     allowNull: true,
     defaultValue: {},
   },
 
-  // ========== AUDIT ==========
+ 
   lastWebhookReceived: { type: DataTypes.DATE, allowNull: true },
   lastWebhookPayload: { type: DataTypes.JSON, allowNull: true },
   retryCount: { type: DataTypes.INTEGER, defaultValue: 0 },
@@ -238,13 +235,12 @@ const Transaction = sequelize.define('Transaction', {
     { fields: ['reference'] },
     { fields: ['campaignId', 'creatorUserId'] },
     { fields: ['fundingBatchId'] },
-    // ✅ NEW indexes
     { fields: ['reservationStatus'], name: 'idx_transactions_reservationStatus' },
     { fields: ['campaignId', 'reservationStatus'], name: 'idx_transactions_campaign_reservation' },
   ],
 });
 
-// ========== ASSOCIATIONS ==========
+
 Transaction.associate = (models) => {
   Transaction.belongsTo(models.Campaign, {
     foreignKey: 'campaignId',
@@ -267,7 +263,7 @@ Transaction.associate = (models) => {
   });
 };
 
-// ========== VIRTUAL FIELDS ==========
+
 Transaction.prototype.getAmountInRands = function() {
   return (this.amountCents / 100).toFixed(2);
 };
@@ -292,7 +288,7 @@ Transaction.prototype.getBrandContributionInRands = function() {
   return (this.brandContributionCents / 100).toFixed(2);
 };
 
-// ========== INSTANCE METHODS ==========
+
 Transaction.prototype.isFunded = function() {
   return ['FUNDED', 'FUNDING_IN_PROGRESS', 'IN_PROGRESS', 'DELIVERED', 'UNDER_REVIEW', 'REVISION_REQUESTED', 'APPROVED', 'PAYOUT_TRIGGERED', 'RELEASED', 'COMPLETED'].includes(this.status);
 };
@@ -317,7 +313,7 @@ Transaction.prototype.canRelease = function() {
   return ['FUNDED', 'APPROVED'].includes(this.status);
 };
 
-// ========== CLASS METHODS ==========
+
 Transaction.getByTradeSafeId = async function(tradesafeTransactionId) {
   return this.findOne({ where: { tradesafeTransactionId } });
 };
