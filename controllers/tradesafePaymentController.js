@@ -1,4 +1,3 @@
-// controllers/tradesafePaymentController.js
 const {
   getAcceptedCreatorsForPayment,
   syncAcceptedCreators,
@@ -16,7 +15,7 @@ const {
   cancelCreatorEscrow,
 } = require("../services/tradesafePaymentService");
 
-// ✅ Updated import — method-based quote
+
 const {
   generateFundingQuote,
   getAvailablePaymentMethods,
@@ -36,9 +35,7 @@ const errResp = (res, err) => {
   return res.status(500).json({ success: false, error: "Something went wrong. Please try again later." });
 };
 
-// ============================================================
-// ✅ HELPER: Resolve campaign identifier (publicId OR numeric id)
-// ============================================================
+
 const resolveCampaignId = async (identifier) => {
   if (!identifier) throw new AppError("Campaign identifier missing", 400);
 
@@ -55,9 +52,7 @@ const resolveCampaignId = async (identifier) => {
   return campaign.id;
 };
 
-// ============================================================
-// 1. GET ACCEPTED CREATORS
-// ============================================================
+
 const getAcceptedCreatorsController = async (req, res) => {
   try {
     const campaignId = await resolveCampaignId(req.params.campaignId);
@@ -66,9 +61,7 @@ const getAcceptedCreatorsController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-// ============================================================
-// 2. SYNC ACCEPTED CREATORS
-// ============================================================
+
 const syncAcceptedCreatorsController = async (req, res) => {
   try {
     const campaignId = await resolveCampaignId(req.params.campaignId);
@@ -77,9 +70,7 @@ const syncAcceptedCreatorsController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-// ============================================================
-// 3. FUND CAMPAIGN (wallet deposit link with payment method)
-// ============================================================
+
 const fundCampaignController = async (req, res) => {
   try {
     const campaignId = await resolveCampaignId(req.params.campaignId);
@@ -92,7 +83,7 @@ const fundCampaignController = async (req, res) => {
       quoteVersion,
     });
 
-    // ✅ Payment method REQUIRED
+
     if (!paymentMethod) {
       return res.status(400).json({
         success: false,
@@ -111,9 +102,7 @@ const fundCampaignController = async (req, res) => {
   }
 };
 
-// ============================================================
-// 4. SIMULATE CAMPAIGN FUNDED (sandbox)
-// ============================================================
+
 const simulateFundedController = async (req, res) => {
   try {
     const campaignId = await resolveCampaignId(req.params.campaignId);
@@ -130,9 +119,7 @@ const simulateFundedController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-// ============================================================
-// 5. SELECT CREATOR (create escrow)
-// ============================================================
+
 const selectCreatorController = async (req, res) => {
   try {
     const { creatorId } = req.body;
@@ -184,7 +171,7 @@ const selectCreatorController = async (req, res) => {
     }
 
     console.log(
-      `✅ Creator ${creatorId} amount: R${perCreatorAmount.toFixed(2)} (budget R${totalBudgetCents / 100} / ${creatorCount} creators)`
+      `Creator ${creatorId} amount: R${perCreatorAmount.toFixed(2)} (budget R${totalBudgetCents / 100} / ${creatorCount} creators)`
     );
 
     const result = await createCreatorEscrow(
@@ -204,9 +191,7 @@ const selectCreatorController = async (req, res) => {
   }
 };
 
-// ============================================================
-// 6. FUND CREATOR ESCROW
-// ============================================================
+
 const fundCreatorController = async (req, res) => {
   try {
     const result = await fundCreatorEscrow(req.params.id);
@@ -214,9 +199,7 @@ const fundCreatorController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-// ============================================================
-// 7. REFUND UNUSED
-// ============================================================
+
 const refundUnusedController = async (req, res) => {
   try {
     const campaignId = await resolveCampaignId(req.params.campaignId);
@@ -225,9 +208,7 @@ const refundUnusedController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-// ============================================================
-// 8. GET CAMPAIGN PAYMENT STATUS
-// ============================================================
+
 const getCampaignPaymentStatusController = async (req, res) => {
   try {
     const campaignId = await resolveCampaignId(req.params.campaignId);
@@ -236,9 +217,7 @@ const getCampaignPaymentStatusController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-// ============================================================
-// 9. GET CREATOR PAYMENT SUMMARY
-// ============================================================
+
 const getCreatorPaymentSummaryController = async (req, res) => {
   try {
     const result = await getCreatorPaymentSummary(req.params.creatorId);
@@ -246,9 +225,7 @@ const getCreatorPaymentSummaryController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-// ============================================================
-// 10. RELEASE FUNDS
-// ============================================================
+
 const releaseFundsToCreatorController = async (req, res) => {
   try {
     const { creatorId } = req.body;
@@ -272,9 +249,7 @@ const releaseFundsToCreatorController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-// ============================================================
-// 11. GET CREATOR WALLET BALANCE
-// ============================================================
+
 const getCreatorBalanceController = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -283,9 +258,7 @@ const getCreatorBalanceController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-// ============================================================
-// 12. WITHDRAW CREATOR FUNDS
-// ============================================================
+
 const withdrawCreatorFundsController = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -300,9 +273,7 @@ const withdrawCreatorFundsController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-// ============================================================
-// 13. CREATOR TRANSACTION HISTORY
-// ============================================================
+
 const getCreatorTransactionHistoryController = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -315,9 +286,7 @@ const getCreatorTransactionHistoryController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-// ============================================================
-// 14. ✅ GET PAYMENT METHODS (for campaign amount)
-// ============================================================
+
 const getPaymentMethodsController = async (req, res) => {
   try {
     const campaignId = await resolveCampaignId(req.params.campaignId);
@@ -330,7 +299,7 @@ const getPaymentMethodsController = async (req, res) => {
       return res.status(404).json({ success: false, error: "Campaign not found" });
     }
 
-    // ✅ Fallback to invoice if campaignBudgetCents is 0
+
     let campaignAmount = (campaign.campaignBudgetCents || 0) / 100;
 
     if (campaignAmount <= 0) {
@@ -359,9 +328,7 @@ const getPaymentMethodsController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-// ============================================================
-// 15. ✅ GENERATE FUNDING QUOTE (with payment method)
-// ============================================================
+
 const generateFundingQuoteController = async (req, res) => {
   try {
     const campaignId = await resolveCampaignId(req.params.campaignId);
@@ -384,9 +351,7 @@ const generateFundingQuoteController = async (req, res) => {
   } catch (err) { return errResp(res, err); }
 };
 
-// ============================================================
-// 16. CANCEL CREATOR ESCROW
-// ============================================================
+
 const cancelCreatorEscrowController = async (req, res) => {
   try {
     const { creatorId, reason } = req.body;

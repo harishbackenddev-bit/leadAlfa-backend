@@ -1,4 +1,4 @@
-// routes/tradesafePaymentRoutes.js
+
 const express = require("express");
 const router = express.Router();
 const { authenticateJWT } = require("../middlewares/authMiddleware");
@@ -23,9 +23,9 @@ const {
   generateFundingQuoteController
 } = require("../controllers/tradesafePaymentController");
 
-// ========== BRAND ROUTES ==========
 
-// Get accepted creators
+
+
 router.get(
   "/campaign/:campaignId/creators",
   authenticateJWT,
@@ -34,7 +34,7 @@ router.get(
   getAcceptedCreatorsController
 );
 
-// Sync accepted creators
+
 router.post(
   "/campaign/:campaignId/sync-creators",
   authenticateJWT,
@@ -43,7 +43,7 @@ router.post(
   syncAcceptedCreatorsController
 );
 
-// ✅ Fund campaign (wallet deposit link)
+
 router.post(
   "/campaign/:campaignId/fund",
   authenticateJWT,
@@ -52,7 +52,7 @@ router.post(
   fundCampaignController
 );
 
-// ✅ Sandbox simulate funded
+
 router.post(
   "/campaign/:campaignId/simulate-funded",
   authenticateJWT,
@@ -61,7 +61,7 @@ router.post(
   simulateFundedController
 );
 
-// ✅ Select creator → create escrow
+
 router.post(
   "/campaign/:campaignId/select-creator",
   authenticateJWT,
@@ -70,7 +70,7 @@ router.post(
   selectCreatorController
 );
 
-// ✅ Fund creator escrow from wallet
+
 router.post(
   "/transaction/:id/fund-creator",
   authenticateJWT,
@@ -79,7 +79,6 @@ router.post(
   fundCreatorController
 );
 
-// ✅ Refund unused budget
 router.post(
   "/campaign/:campaignId/refund-unused",
   authenticateJWT,
@@ -88,7 +87,7 @@ router.post(
   refundUnusedController
 );
 
-// Release funds to creator
+
 router.post(
   "/campaign/:campaignId/release",
   authenticateJWT,
@@ -97,7 +96,7 @@ router.post(
   releaseFundsToCreatorController
 );
 
-// Campaign payment status
+
 router.get(
   "/campaign/:campaignId/status",
   authenticateJWT,
@@ -106,7 +105,7 @@ router.get(
   getCampaignPaymentStatusController
 );
 
-// ========== CREATOR ROUTES ==========
+
 router.get(
   "/creator/:creatorId/summary",
   authenticateJWT,
@@ -114,7 +113,7 @@ router.get(
   getCreatorPaymentSummaryController
 );
 
-// Get creator payment summary
+
 router.get(
   "/creator/:creatorId/summary",
   authenticateJWT,
@@ -122,7 +121,7 @@ router.get(
   getCreatorPaymentSummaryController
 );
 
-// ✅ Get creator wallet balance from TradeSafe
+
 router.get(
   "/creator/balance",
   authenticateJWT,
@@ -130,7 +129,6 @@ router.get(
   getCreatorBalanceController
 );
 
-// ✅ Withdraw funds
 router.post(
   "/creator/withdraw",
   authenticateJWT,
@@ -145,11 +143,6 @@ router.get(
   getCreatorTransactionHistoryController
 );
 
-// ========== FUNDING QUOTE ROUTES ==========
-
-
-
-
 
 router.post(
   "/campaign/:campaignId/cancel-creator",
@@ -159,7 +152,7 @@ router.post(
   cancelCreatorEscrowController
 );
 
-// ✅ Temporary: Credit wallet (sandbox only)
+
 router.post(
   "/credit-wallet",
   async (req, res) => {

@@ -39,7 +39,7 @@ const router = express.Router();
 
 router.use(authenticateJWT, allowRoles("admin"));
 
-// Creator Profile Admin Routes
+
 router.get("/creator-profiles", getCreatorProfileRequests);
 router.get("/creator-profiles/:id", getCreatorProfileById);
 router.put("/creator-profiles/:id/approve", approveProfile);
@@ -47,7 +47,7 @@ router.put("/creator-profiles/:id/reject", rejectProfile);
 router.put("/creator-profiles/:id/clarify", askClarification);
 router.delete("/creator-profiles/:id", deleteProfileRequest);
 
-// Brand Profile Admin Routes
+
 router.get("/brand-profiles", getBrandProfileRequests);
 router.get("/brand-profiles/:id", getBrandProfileById);
 router.put("/brand-profiles/:id/approve", approveBrandProfile);
@@ -55,7 +55,7 @@ router.put("/brand-profiles/:id/reject", rejectBrandProfile);
 router.put("/brand-profiles/:id/clarify", askBrandClarification);
 router.delete("/brand-profiles/:id", deleteBrandProfileRequest);
 
-// Contact Request Admin Routes
+
 const adminContactUpdateValidation = [
   param("publicId")
     .isString()

@@ -1,4 +1,3 @@
-// services/tradesafe.service.js
 const axios = require('axios');
 const fs = require('fs');
 const path = require('path');
@@ -13,7 +12,7 @@ class TradeSafeService {
     this.tokenExpiry = null;
 
     if (!this.clientId || !this.clientSecret) {
-      console.warn('⚠️ TRADESAFE_CLIENT_ID / TRADESAFE_CLIENT_SECRET not set in env.');
+      console.warn('tRADESAFE_CLIENT_ID / TRADESAFE_CLIENT_SECRET not set in env.');
     }
 
     this.logDir = path.join(__dirname, '../logs/tradesafe');
@@ -116,7 +115,7 @@ class TradeSafeService {
     }
   }
 
-  // ========== REGISTER CREATOR ==========
+ 
   async registerCreator(userData, bankAccount) {
     const bankName = bankAccount.bankName || bankAccount.bank || bankAccount.bankCode;
 
@@ -156,7 +155,7 @@ class TradeSafeService {
     return result.tokenCreate;
   }
 
-  // ========== REGISTER BRAND ==========
+
   async registerBrand(userData) {
     if (!userData.phoneNumber) {
       throw new Error('registerBrand requires a real phoneNumber; refusing to use a placeholder.');
@@ -206,7 +205,7 @@ class TradeSafeService {
     return result.tokenCreate;
   }
 
-  // ========== GET TOKEN STATUS ==========
+
   async getTokenStatus(tokenId) {
     const query = `
       query getToken($tokenId: ID!) {
@@ -226,7 +225,6 @@ class TradeSafeService {
     return result.token;
   }
 
-  // ========== ORGANIZATION MANAGEMENT ==========
   async getOrganizations() {
     const query = `
       query organizations {
@@ -255,7 +253,6 @@ class TradeSafeService {
     return result.addUserToOrganization;
   }
 
-  // ========== TRANSACTION MANAGEMENT ==========
   async transactionCreate({
     title,
     description,
@@ -327,7 +324,6 @@ class TradeSafeService {
     return result.transactionCancel;
   }
 
-  // ========== DELIVERY MUTATIONS ==========
   async allocationStartDelivery(allocationId) {
     const mutation = `
       mutation allocationStartDelivery($id: ID!) {
@@ -352,10 +348,6 @@ class TradeSafeService {
 
   // ========== TOKEN DEPOSIT ==========
   async tokenDeposit(tokenId, options = {}) {
-    console.log("💰 tokenDeposit STARTED");
-    console.log("   Token ID:", tokenId);
-    console.log("   Value:", options.value);
-    console.log("   Payment Methods:", options.paymentMethods);
 
     const mutation = `
     mutation tokenDeposit($id: ID!, $embed: Boolean, $minutes: Int, $paymentMethods: [PaymentGateway!], $value: Int) {
@@ -377,7 +369,6 @@ class TradeSafeService {
       variables.paymentMethods = options.paymentMethods;
     }
 
-    // ✅ Add value (integer, rands)
     if (options.value !== undefined && options.value !== null) {
       variables.value = Math.round(Number(options.value));
     }
@@ -385,16 +376,15 @@ class TradeSafeService {
     try {
       const result = await this._executeQuery(mutation, variables);
       this._logApiCall('tokenDeposit', variables, result);
-      console.log("✅ tokenDeposit COMPLETED");
-      console.log("   URL:", result.tokenDeposit?.url);
+
       return result.tokenDeposit;
     } catch (error) {
-      console.error("❌ tokenDeposit failed:", error.message);
+      console.error("tokenDeposit failed:", error.message);
       throw error;
     }
   }
 
-  // ========== DEPOSIT FROM WALLET ==========
+
   async transactionDepositWallet(transactionId) {
     const mutation = `
       mutation transactionDepositWallet($id: ID!) {
@@ -406,7 +396,7 @@ class TradeSafeService {
     return result.transactionDepositWallet;
   }
 
-  // ========== READS ==========
+
   async getTransaction(transactionId) {
     const query = `
       query getTransaction($transactionId: ID!) {
@@ -478,7 +468,7 @@ class TradeSafeService {
     return result.allocation;
   }
 
-  // ========== SCHEMA INTROSPECTION ==========
+
   async introspectEnum(enumName) {
     const query = `
       query introspectEnum($name: String!) {
@@ -492,7 +482,6 @@ class TradeSafeService {
     return result.__type;
   }
 
-  // ========== SANDBOX-ONLY: TOKEN UPDATE BALANCE ==========
   async tokenUpdateBalance({ id, value, type = 'CREDIT' }) {
     if (process.env.NODE_ENV === 'production') {
       throw new Error(
@@ -500,10 +489,6 @@ class TradeSafeService {
       );
     }
 
-    console.log("💰 tokenUpdateBalance STARTED (SANDBOX ONLY)");
-    console.log("   Token ID:", id);
-    console.log("   Value:", value);
-    console.log("   Type:", type);
 
     const mutation = `
       mutation tokenUpdateBalance($id: ID!, $value: Float!, $type: TransactionType!) {
@@ -517,26 +502,17 @@ class TradeSafeService {
     try {
       const result = await this._executeQuery(mutation, { id, value, type });
       this._logApiCall('tokenUpdateBalance', { id, value, type }, result);
-      console.log("✅ tokenUpdateBalance COMPLETED");
-      console.log("   New Balance:", result.tokenUpdateBalance?.balance);
+
       return result.tokenUpdateBalance;
     } catch (error) {
-      console.error("❌ tokenUpdateBalance failed:", error.message);
+      console.error(" tokenUpdateBalance failed:", error.message);
       throw error;
     }
   }
 
 
-
-  // ========== TOKEN ACCOUNT WITHDRAWAL ==========
-
   async tokenAccountWithdraw({ tokenId, value, rtc = false }) {
-    console.log("💰 tokenAccountWithdraw STARTED");
-    console.log("   Token ID:", tokenId);
-    console.log("   Value:", value);
-    console.log("   RTC:", rtc);
 
-    // ✅ tokenAccountWithdraw returns Boolean — no sub-selection
     const mutation = `
     mutation tokenAccountWithdraw($id: ID!, $value: Float, $rtc: Boolean) {
       tokenAccountWithdraw(id: $id, value: $value, rtc: $rtc)
@@ -552,11 +528,10 @@ class TradeSafeService {
     try {
       const result = await this._executeQuery(mutation, variables);
       this._logApiCall('tokenAccountWithdraw', variables, result);
-      console.log("✅ tokenAccountWithdraw COMPLETED");
-      console.log("   Result:", result.tokenAccountWithdraw);
-      return result.tokenAccountWithdraw; // true/false
+
+      return result.tokenAccountWithdraw;
     } catch (error) {
-      console.error("❌ tokenAccountWithdraw failed:", error.message);
+      console.error("tokenAccountWithdraw failed:", error.message);
       throw error;
     }
   }

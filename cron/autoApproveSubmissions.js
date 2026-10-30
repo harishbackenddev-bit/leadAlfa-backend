@@ -1,4 +1,4 @@
-// cron/autoApproveSubmissions.js
+
 const cron = require("node-cron");
 const { Op } = require("sequelize");
 const {
@@ -20,9 +20,7 @@ const REVISION_STATUSES = {
   REJECTED: "rejected",
 };
 
-// ============================================================
-// CONFIG
-// ============================================================
+
 const AUTO_APPROVE_DAYS = 3;
 const BATCH_SIZE = 50;
 
@@ -33,9 +31,7 @@ const ESCROW_OK_STATUSES = [
   "COMPLETED",
 ];
 
-// ============================================================
-// MAIN CRON RUNNER
-// ============================================================
+
 async function runAutoApproval(io) {
   const startedAt = new Date();
   const cutoff = new Date(
@@ -52,7 +48,7 @@ async function runAutoApproval(io) {
   let failed = 0;
 
   try {
-    // ✅ PRODUCTION: only process revisions older than 3 days
+    
     const staleRevisions = await SubmissionRevision.findAll({
       where: {
         status: REVISION_STATUSES.PENDING_REVIEW,
@@ -97,11 +93,11 @@ async function runAutoApproval(io) {
     );
 
     if (staleRevisions.length === 0) {
-      console.log("[AutoApprove] ✅ Nothing to do");
+      console.log("[AutoApprove] Nothing to do");
       return;
     }
 
-    // Process one by one
+
     for (const revision of staleRevisions) {
       processed++;
       console.log(
@@ -122,23 +118,21 @@ async function runAutoApproval(io) {
 
     const duration = ((Date.now() - startedAt.getTime()) / 1000).toFixed(2);
     console.log(
-      `\n[AutoApprove] ✅ Done in ${duration}s | processed=${processed} | approved=${approved} | skipped=${skipped} | failed=${failed}`
+      `\n[AutoApprove] Done in ${duration}s | processed=${processed} | approved=${approved} | skipped=${skipped} | failed=${failed}`
     );
   } catch (err) {
     console.error("[AutoApprove] ✗ Fatal error:", err);
   }
 }
 
-// ============================================================
-// PROCESS A SINGLE REVISION
-// ============================================================
+
 async function processOneRevision(revision, io) {
   const submission = revision.submission;
   const job = submission?.job;
   const campaign = job?.campaign;
   const creator = job?.creator;
 
-  // 1. Relation sanity check
+
   if (!submission || !job || !campaign || !creator) {
     console.warn(
       `[AutoApprove] ⏭ Skip ${revision.publicId} — missing relations`
@@ -146,7 +140,7 @@ async function processOneRevision(revision, io) {
     return "skipped";
   }
 
-  // 2. Job status guard
+
   if (job.status === "approved") {
     console.log(
       `[AutoApprove] ⏭ Skip ${revision.publicId} — job already approved`
@@ -161,7 +155,7 @@ async function processOneRevision(revision, io) {
     return "skipped";
   }
 
-  // 3. Fresh idempotency check
+
   const freshRevision = await SubmissionRevision.findByPk(revision.id, {
     attributes: ["id", "status", "publicId"],
   });
@@ -176,7 +170,7 @@ async function processOneRevision(revision, io) {
     return "skipped";
   }
 
-  // 4. Escrow check
+
   const escrowTx = await Transaction.findOne({
     where: {
       campaignId: campaign.id,
@@ -192,14 +186,14 @@ async function processOneRevision(revision, io) {
     return "skipped";
   }
 
-  // 5. ✅ Same approveSubmission() that manual flow uses
+
   await approveSubmission(submission.publicId, campaign.brandId, io);
 
   console.log(
     `[AutoApprove] ✓ Approved submission ${submission.publicId} (revision ${revision.revisionNumber})`
   );
 
-  // 6. Release funds
+
   try {
     const releaseResult = await releaseFundsToCreator(
       campaign.id,
@@ -220,9 +214,7 @@ async function processOneRevision(revision, io) {
   return "approved";
 }
 
-// ============================================================
-// CRON REGISTRATION
-// ============================================================
+
 cron.schedule(
   "0 * * * *",
   async () => {
@@ -240,6 +232,6 @@ cron.schedule(
   }
 );
 
-console.log("[Cron] ✅ Auto-approve job registered (hourly @ minute 0 UTC)");
+console.log("[Cron] Auto-approve job registered (hourly @ minute 0 UTC)");
 
 module.exports = { runAutoApproval };

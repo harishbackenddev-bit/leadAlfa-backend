@@ -1,4 +1,3 @@
-// services/tradesafePaymentService.js
 const { sequelize } = require("../config/database");
 const { Op, fn, col, where, QueryTypes, literal } = require("sequelize");
 const Campaign = require("../models/campaigns/campaign.model");
@@ -11,7 +10,7 @@ const tradesafeService = require("./tradesafe.service");
 const AppError = require("../utils/appError");
 const BrandProfile = require('../models/brandProfile/brandProfile.model');
 const CreatorProfile = require('../models/creatorProfile/creatorProfile.model');
-// Top pe import update karo
+
 const { generateFundingQuote } = require("./fundingQuoteService");
 
 const { PAYMENT_METHODS } = require("../config/tradesafeFees");
@@ -21,9 +20,7 @@ const { PAYMENT_METHODS } = require("../config/tradesafeFees");
 const CREATOR_COMMISSION_RATE = parseFloat(process.env.CREATOR_COMMISSION_RATE) || 0.20;
 const BRAND_SERVICE_FEE_RATE = parseFloat(process.env.BRAND_SERVICE_FEE_RATE) || 0.05;
 
-// ============================================================
-// Reconciliation guard
-// ============================================================
+
 function assertReconciled({ totalCreatorBudget, totalCommission, totalBrandFee, creatorDetails }) {
   const sumGross = creatorDetails.reduce((s, c) => s + c.grossAmountCents, 0);
   const sumNet = creatorDetails.reduce((s, c) => s + c.creatorNetCents, 0);
@@ -44,9 +41,7 @@ function assertReconciled({ totalCreatorBudget, totalCommission, totalBrandFee, 
   }
 }
 
-// ============================================================
-// Shared read
-// ============================================================
+
 const fetchAcceptedApplicationsWithVerification = async (campaignId, transaction = null) => {
   return sequelize.query(
     `
@@ -73,9 +68,7 @@ const fetchAcceptedApplicationsWithVerification = async (campaignId, transaction
   );
 };
 
-// ============================================================
-// 0. GET ACCEPTED CREATORS
-// ============================================================
+
 const getAcceptedCreatorsForPayment = async (campaignId, brandId) => {
   const campaign = await Campaign.findOne({
     where: { id: campaignId, brandId, isDeleted: false },
@@ -113,9 +106,7 @@ const getAcceptedCreatorsForPayment = async (campaignId, brandId) => {
   };
 };
 
-// ============================================================
-// 0b. SYNC
-// ============================================================
+
 const syncAcceptedCreators = async (campaignId, brandId) => {
   const campaign = await Campaign.findOne({
     where: { id: campaignId, brandId, isDeleted: false },
@@ -144,15 +135,10 @@ const syncAcceptedCreators = async (campaignId, brandId) => {
   return { campaignId, checked: applications.length, updated, errors };
 };
 
-// ============================================================
-// EVENT 2: FUND CAMPAIGN WALLET
-// ============================================================
-
-
 
 
 const fundCampaign = async (campaignId, brandUserId, options = {}) => {
-  const { paymentMethod } = options;   // ✅ Accept paymentMethod
+  const { paymentMethod } = options;
   const transaction = await sequelize.transaction();
 
   try {
@@ -162,13 +148,11 @@ const fundCampaign = async (campaignId, brandUserId, options = {}) => {
     });
     if (!campaign) throw new AppError("Campaign not found", 404);
 
-    // Allow retry
     const fundableStatuses = ['UNFUNDED', 'AWAITING_FUNDING', 'FUNDING_FAILED', 'PENDING_PAYMENT'];
     if (!fundableStatuses.includes(campaign.fundingStatus)) {
       throw new AppError(`Campaign cannot be funded in state: ${campaign.fundingStatus}`, 400);
     }
 
-    // ✅ Require payment method
     if (!paymentMethod) {
       throw new AppError("Payment method required", 400);
     }
@@ -189,7 +173,6 @@ const fundCampaign = async (campaignId, brandUserId, options = {}) => {
     const brandFeeCents = Math.round(parseFloat(invoice.serviceFeeAmount) * 100);
     const vatCents = Math.round(parseFloat(invoice.vatAmount || 0) * 100);
 
-    // ✅ Generate quote with payment method
     const quote = await generateFundingQuote(campaign, paymentMethod);
     const tradeSafeFeeCents = Math.round(quote.tradesafeFeeInclVat * 100);
 
@@ -197,7 +180,6 @@ const fundCampaign = async (campaignId, brandUserId, options = {}) => {
 
     if (totalCents <= 0) throw new AppError("Invoice amount invalid", 400);
 
-    // Brand resolve
     const brandDetails = await BrandProfile.findByPk(campaign.brandId, {
       attributes: ["id", "userId", "companyEmail"],
       transaction,
@@ -217,13 +199,12 @@ const fundCampaign = async (campaignId, brandUserId, options = {}) => {
       throw new AppError("Brand not verified with TradeSafe", 400);
     }
 
-    // ✅ Restrict gateway on TradeSafe checkout
     const tradeSafeCode = methodConfig.tradeSafeCode;
 
     const walletDeposit = await tradesafeService.tokenDeposit(brandTradeSafeUserId, {
       minutes: 60,
       value: Math.ceil(totalCents / 100),
-      paymentMethods: [tradeSafeCode],   // ✅ LOCK selected gateway
+      paymentMethods: [tradeSafeCode], 
     });
     if (!walletDeposit?.url) throw new AppError("Failed to generate wallet deposit link", 400);
 
@@ -298,9 +279,7 @@ const fundCampaign = async (campaignId, brandUserId, options = {}) => {
   }
 };
 
-// ============================================================
-// CONFIRM CAMPAIGN FUNDED
-// ============================================================
+
 const confirmCampaignFunded = async (fundingBatchId) => {
   const fundingBatch = await FundingBatch.findByPk(fundingBatchId);
 
@@ -340,9 +319,7 @@ const confirmCampaignFunded = async (fundingBatchId) => {
   return { fundingBatch, campaign };
 };
 
-// ============================================================
-// SANDBOX: SIMULATE CAMPAIGN FUNDED
-// ============================================================
+
 const simulateCampaignFundedSandbox = async (fundingBatchId) => {
   if (process.env.NODE_ENV === 'production') {
     throw new AppError('Sandbox simulation disabled in production.', 403);
@@ -360,9 +337,7 @@ const simulateCampaignFundedSandbox = async (fundingBatchId) => {
   return confirmCampaignFunded(fundingBatchId, parseFloat(fundingBatch.totalValue));
 };
 
-// ============================================================
-// EVENT 3: RESERVE BUDGET
-// ============================================================
+
 const reserveBudgetForCreator = async (campaignId, creatorAmountCents, dbTx) => {
   const campaign = await Campaign.findOne({
     where: { id: campaignId },
@@ -386,16 +361,12 @@ const reserveBudgetForCreator = async (campaignId, creatorAmountCents, dbTx) => 
   return campaign;
 };
 
-// ============================================================
-// EVENT 3: CREATE CREATOR ESCROW
-// ============================================================
+
 const createCreatorEscrow = async (campaignId, creatorId, creatorAmount, brandUserId) => {
   const transaction = await sequelize.transaction();
 
   try {
-    // ============================================================
-    // 1. Campaign
-    // ============================================================
+
     const campaign = await Campaign.findOne({
       where: { id: campaignId, isDeleted: false },
       transaction,
@@ -406,16 +377,14 @@ const createCreatorEscrow = async (campaignId, creatorId, creatorAmount, brandUs
       throw new AppError("Campaign not funded yet", 400);
     }
 
-    // ============================================================
-    // 2. Brand resolve karo — campaign.brandId = BrandProfile.id
-    // ============================================================
+
     const brandProfile = await BrandProfile.findByPk(campaign.brandId, {
       attributes: ["id", "userId", "companyEmail"],
       transaction,
     });
     if (!brandProfile) throw new AppError("Brand profile not found", 404);
 
-    // ✅ companyEmail se User match karo
+
     const brandUser = await User.findOne({
       where: sequelize.where(
         sequelize.fn("LOWER", sequelize.fn("TRIM", sequelize.col("email"))),
@@ -426,7 +395,7 @@ const createCreatorEscrow = async (campaignId, creatorId, creatorAmount, brandUs
     });
 
     if (!brandUser) {
-      // Fallback: BrandProfile.userId se lo
+
       const fallback = await User.findByPk(brandProfile.userId, {
         attributes: ["id", "email", "tradeSafeUserId", "tradeSafeStatus"],
         transaction,
@@ -440,7 +409,7 @@ const createCreatorEscrow = async (campaignId, creatorId, creatorAmount, brandUs
     const brandTradeSafeUserId = brand.get("tradeSafeUserId");
     const brandTradeSafeStatus = brand.get("tradeSafeStatus");
 
-    console.log("✅ Brand resolved:");
+
     console.log("   brandProfile.id:", brandProfile.id);
     console.log("   brand.email:", brand.get("email"));
     console.log("   brand.tradeSafeUserId:", brandTradeSafeUserId);
@@ -453,15 +422,13 @@ const createCreatorEscrow = async (campaignId, creatorId, creatorAmount, brandUs
       );
     }
 
-    // ============================================================
-    // 3. Creator resolve karo
-    // ============================================================
+
     let creator = await User.findByPk(creatorId, {
       attributes: ["id", "firstName", "lastName", "email", "tradeSafeUserId", "tradeSafeStatus"],
       transaction,
     });
 
-    // Agar User nahi mila, toh CreatorProfile se resolve karo
+
     if (!creator) {
       const CreatorProfile = require("../models/creatorProfile/creatorProfile.model");
       const profile = await CreatorProfile.findByPk(creatorId, { transaction });
@@ -483,10 +450,6 @@ const createCreatorEscrow = async (campaignId, creatorId, creatorAmount, brandUs
     const creatorTradeSafeStatus = creator.get("tradeSafeStatus");
     const creatorUserId = creator.get("id");
 
-    console.log("✅ Creator resolved:");
-    console.log("   creator.id:", creatorUserId);
-    console.log("   creator.email:", creator.get("email"));
-    console.log("   creator.tradeSafeUserId:", creatorTradeSafeUserId);
 
     if (!creatorTradeSafeUserId || creatorTradeSafeStatus !== "VERIFIED") {
       throw new AppError(
@@ -495,7 +458,6 @@ const createCreatorEscrow = async (campaignId, creatorId, creatorAmount, brandUs
       );
     }
 
-    // ✅ Brand aur Creator same nahi hone chahiye
     if (brand.get("id") === creatorUserId) {
       throw new AppError(
         "Brand and Creator cannot be the same user.",
@@ -503,27 +465,19 @@ const createCreatorEscrow = async (campaignId, creatorId, creatorAmount, brandUs
       );
     }
 
-    // ============================================================
-    // 4. Existing escrow check
-    // ============================================================
     const existing = await Transaction.findOne({
       where: { campaignId, creatorUserId },
       transaction,
     });
     if (existing) throw new AppError("Creator already selected", 400);
 
-    // ============================================================
-    // 5. Amounts calculate karo
-    // ============================================================
+
     const creatorAmountCents = Math.round(parseFloat(creatorAmount) * 100);
     const commissionCents = Math.round(creatorAmountCents * CREATOR_COMMISSION_RATE);
     const creatorNetCents = creatorAmountCents - commissionCents;
 
     await reserveBudgetForCreator(campaignId, creatorAmountCents, transaction);
 
-    // ============================================================
-    // 6. TradeSafe transaction create
-    // ============================================================
     const AGENT_TOKEN_ID = process.env.TRADESAFE_AGENT_TOKEN_ID;
     if (!AGENT_TOKEN_ID) throw new AppError("TRADESAFE_AGENT_TOKEN_ID missing", 500);
 
@@ -561,13 +515,11 @@ const createCreatorEscrow = async (campaignId, creatorId, creatorAmount, brandUs
 
     if (!childTx?.id) throw new AppError("TradeSafe transaction creation failed", 400);
 
-    // ============================================================
-    // 7. Transaction record
-    // ============================================================
+
     const escrowRecord = await Transaction.create({
       campaignId: campaign.id,
-      brandUserId: brand.get("id"),      // ✅ User ID
-      creatorUserId,                      // ✅ User ID
+      brandUserId: brand.get("id"),  
+      creatorUserId,                 
       fundingBatchId: campaign.fundingBatchId,
       tradesafeTransactionId: childTx.id,
       tradesafeAllocationId: childTx.allocations?.[0]?.id || null,
@@ -607,9 +559,6 @@ const createCreatorEscrow = async (campaignId, creatorId, creatorAmount, brandUs
   }
 };
 
-// ============================================================
-// EVENT 3: FUND CREATOR ESCROW
-// ============================================================
 const fundCreatorEscrow = async (transactionId) => {
   const dbTx = await sequelize.transaction();
 
@@ -654,9 +603,7 @@ const fundCreatorEscrow = async (transactionId) => {
   }
 };
 
-// ============================================================
-// REFUND UNUSED
-// ============================================================
+
 const refundUnusedBudget = async (campaignId) => {
   const campaign = await Campaign.findByPk(campaignId);
   if (!campaign) throw new AppError("Campaign not found", 404);
@@ -676,9 +623,7 @@ const refundUnusedBudget = async (campaignId) => {
   };
 };
 
-// ============================================================
-// RELEASE FUNDS TO CREATOR (existing)
-// ============================================================
+
 const releaseFundsToCreator = async (campaignId, creatorId, brandUserId) => {
   const transaction = await sequelize.transaction();
 
@@ -694,9 +639,7 @@ const releaseFundsToCreator = async (campaignId, creatorId, brandUserId) => {
 
     const realCreatorId = creatorUser.id;
 
-    // console.log("creatorUser",creatorUser);
 
-    // ✅ FIX: Creator ka TradeSafe token ID yahan declare karo
     const creatorTradeSafeUserId = creatorUser.get("tradeSafeUserId");
     if (!creatorTradeSafeUserId) {
       throw new AppError(`Creator has no TradeSafe token — cannot release funds`, 400);
@@ -730,17 +673,15 @@ const releaseFundsToCreator = async (campaignId, creatorId, brandUserId) => {
     const allocationId = escrowTx.tradesafeAllocationId;
     const IS_SANDBOX = process.env.NODE_ENV !== 'production';
 
-    // ============================================================
-    // ✅ SANDBOX: Direct credit creator wallet
-    // ============================================================
+
     if (IS_SANDBOX) {
-      console.log("⚠️ SANDBOX MODE: Skipping TradeSafe release calls");
+      console.log("SANDBOX MODE: Skipping TradeSafe release calls");
 
       const creatorNet = parseFloat(escrowTx.creatorNetAmount || 0);
 
       if (creatorNet > 0) {
         try {
-          console.log(`💰 Crediting creator wallet (sandbox): R${creatorNet} → ${creatorTradeSafeUserId}`);
+          console.log(`Crediting creator wallet (sandbox): R${creatorNet} → ${creatorTradeSafeUserId}`);
 
           await tradesafeService.tokenUpdateBalance({
             id: creatorTradeSafeUserId,
@@ -748,10 +689,10 @@ const releaseFundsToCreator = async (campaignId, creatorId, brandUserId) => {
             type: "CREDIT",
           });
 
-          console.log(`✅ Creator wallet credited: R${creatorNet}`);
+          console.log(`Creator wallet credited: R${creatorNet}`);
         } catch (creditErr) {
-          console.error(`❌ Wallet credit failed: ${creditErr.message}`);
-          // Continue — mark as PAYOUT_TRIGGERED anyway
+          console.error(`Wallet credit failed: ${creditErr.message}`);
+    
         }
       }
 
@@ -778,9 +719,7 @@ const releaseFundsToCreator = async (campaignId, creatorId, brandUserId) => {
       };
     }
 
-    // ============================================================
-    // ✅ PRODUCTION: Real TradeSafe release flow
-    // ============================================================
+
     let allocation = null;
     try { allocation = await tradesafeService.getAllocation(allocationId); } catch (e) { /* noop */ }
     const allocationState = allocation?.state;
@@ -824,9 +763,7 @@ const releaseFundsToCreator = async (campaignId, creatorId, brandUserId) => {
   }
 };
 
-// ============================================================
-// GET CAMPAIGN PAYMENT STATUS
-// ============================================================
+
 const getCampaignPaymentStatus = async (campaignId, brandId) => {
   const campaign = await Campaign.findOne({
     where: { id: campaignId, brandId, isDeleted: false },
@@ -900,9 +837,7 @@ const getCampaignPaymentStatus = async (campaignId, brandId) => {
   };
 };
 
-// ============================================================
-// GET CREATOR PAYMENT SUMMARY
-// ============================================================
+
 const getCreatorPaymentSummary = async (creatorId) => {
   const creatorProfile = await CreatorProfile.findOne({ where: { id: creatorId } });
   if (!creatorProfile) throw new AppError(`Creator profile not found`, 404);
@@ -949,9 +884,7 @@ const getCreatorPaymentSummary = async (creatorId) => {
   };
 };
 
-// ============================================================
-// ✅ CREATOR WALLET BALANCE (from TradeSafe)
-// ============================================================
+
 const getCreatorWalletBalance = async (userId) => {
   const user = await User.findByPk(userId, {
     attributes: ["id", "tradeSafeUserId", "tradeSafeStatus"],
@@ -997,9 +930,7 @@ const getCreatorWalletBalance = async (userId) => {
   }
 };
 
-// ============================================================
-// ✅ CREATOR WITHDRAWAL
-// ============================================================
+
 const withdrawCreatorFunds = async (userId, amount) => {
   const user = await User.findByPk(userId, {
     attributes: ["id", "email", "tradeSafeUserId", "tradeSafeStatus"],
@@ -1032,7 +963,7 @@ const withdrawCreatorFunds = async (userId, amount) => {
     );
   }
 
-  // ✅ Call TradeSafe withdrawal — returns boolean
+
   const success = await tradesafeService.tokenAccountWithdraw({
     tokenId: tradeSafeUserId,
     value: withdrawAmount,
@@ -1043,7 +974,7 @@ const withdrawCreatorFunds = async (userId, amount) => {
     throw new AppError("Withdrawal request failed", 502);
   }
 
-  // Generate reference for tracking
+
   const reference = `WITHDRAW-${user.id}-${Date.now()}`;
 
   return {
@@ -1056,9 +987,7 @@ const withdrawCreatorFunds = async (userId, amount) => {
   };
 };
 
-// ============================================================
-// GET CREATOR TRANSACTION HISTORY
-// ============================================================
+
 const getCreatorTransactionHistory = async (userId, { page = 1, limit = 10, filter = 'all' } = {}) => {
   const user = await User.findByPk(userId, {
     attributes: ['id', 'firstName', 'lastName', 'email'],
@@ -1071,7 +1000,7 @@ const getCreatorTransactionHistory = async (userId, { page = 1, limit = 10, filt
     creatorUserId: userId,
   };
 
-  // Optional filter by status
+
   if (filter === 'completed') {
     whereClause.status = 'COMPLETED';
   } else if (filter === 'pending') {
@@ -1142,13 +1071,13 @@ const cancelCreatorEscrow = async (campaignId, creatorId, brandUserId, reason = 
     });
     if (!escrowTx) throw new AppError("Creator escrow not found", 404);
 
-    // ✅ Already released/completed — can't cancel
+
     const nonCancellableStates = ['RELEASED', 'COMPLETED', 'PAYOUT_TRIGGERED'];
     if (nonCancellableStates.includes(escrowTx.status)) {
       throw new AppError(`Cannot cancel: transaction is ${escrowTx.status}`, 400);
     }
 
-    // ✅ Call TradeSafe to cancel
+
     if (escrowTx.tradesafeTransactionId) {
       try {
         await tradesafeService.transactionCancel(
@@ -1157,17 +1086,17 @@ const cancelCreatorEscrow = async (campaignId, creatorId, brandUserId, reason = 
         );
       } catch (err) {
         console.error("TradeSafe cancel failed:", err.message);
-        // Continue anyway — mark locally
+
       }
     }
 
-    // ✅ Update local status
+
     await escrowTx.update({
       status: 'CANCELLED',
       reservationStatus: 'REFUNDED',
     }, { transaction });
 
-    // ✅ Return reserved budget to available
+
     const reservedCents = escrowTx.allocatedFromCampaignCents || 0;
     await campaign.update({
       reservedBudgetCents: Math.max(0, campaign.reservedBudgetCents - reservedCents),

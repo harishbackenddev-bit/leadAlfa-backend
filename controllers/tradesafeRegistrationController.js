@@ -1,18 +1,13 @@
-// controllers/tradesafeRegistrationController.js
 const { registerCreatorWithTradeSafe, getCreatorTradeSafeStatus } = require("../services/tradesafeCreatorService");
 const { registerBrandWithTradeSafe, getBrandTradeSafeStatus } = require("../services/tradesafeBrandService");
 const tradesafeService = require('../services/tradesafe.service');
 const User = require("../models/user.model");
 
 const registerCreator = async (req, res) => {
-  console.log("🔄 registerCreator (Separate API) STARTED");
 
   try {
     const userId = req.user.id;
     const { bank, accountNumber, accountType } = req.body;
-
-    console.log("👤 User ID:", userId);
-    console.log("🏦 Bank Details:", { bank, accountNumber, accountType });
 
     if (!bank || !accountNumber) {
       return res.status(400).json({ error: "Bank name and account number are required" });
@@ -67,7 +62,7 @@ const registerCreator = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Creator registration error:", error.message);
+    console.error("Creator registration error:", error.message);
     return res.status(500).json({ error: error.message || "Failed to register creator" });
   }
 };
@@ -79,8 +74,6 @@ const registerBrand = async (req, res) => {
     const userId = req.user.id;
     const { bank, accountNumber, accountType } = req.body;
 
-    console.log("👤 User ID:", userId);
-    console.log("🏦 Bank Details:", { bank, accountNumber, accountType });
 
     if (!bank || !accountNumber) {
       return res.status(400).json({ error: "Bank name and account number are required" });
@@ -109,7 +102,6 @@ const registerBrand = async (req, res) => {
       return res.status(404).json({ error: "Brand profile not found" });
     }
 
-    // Ensure we have all required fields
     const brandData = {
       firstName: user.firstName || profile.contactPersonFirstName || "Brand",
       lastName: user.lastName || profile.contactPersonLastName || "User",
@@ -138,17 +130,15 @@ const registerBrand = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Brand registration error:", error.message);
+    console.error("Brand registration error:", error.message);
     return res.status(500).json({ error: error.message || "Failed to register brand" });
   }
 };
 
 const getTradeSafeStatus = async (req, res) => {
-  console.log("📊 getTradeSafeStatus STARTED");
 
   try {
     const userId = req.user.id;
-    console.log("📊 userId:", userId);
 
     const user = await User.findByPk(userId, {
       attributes: [
@@ -167,7 +157,7 @@ const getTradeSafeStatus = async (req, res) => {
       });
     }
 
-    // ✅ Use .get() — reliable
+
     const tradeSafeUserId = user.get("tradeSafeUserId");
     const tradeSafeReference = user.get("tradeSafeReference");
 
@@ -175,22 +165,13 @@ const getTradeSafeStatus = async (req, res) => {
     let currentKycStatus = user.get("kycStatus");
     let currentBankVerificationStatus = user.get("bankVerificationStatus");
 
-    console.log("📊 Extracted:");
-    console.log("   tradeSafeUserId:", tradeSafeUserId);
-    console.log("   tradeSafeReference:", tradeSafeReference);
-    console.log("   status:", currentStatus);
 
-    // ============================================================
-    // Check TradeSafe token
-    // ============================================================
     if (tradeSafeUserId) {
       try {
         const token = await tradesafeService.getTokenStatus(tradeSafeUserId);
 
-        console.log("📊 TradeSafe token response:", token);
 
         if (token && token.id) {
-          console.log("✅ TradeSafe token exists");
 
           currentStatus = "VERIFIED";
           currentKycStatus = "VERIFIED";
@@ -205,19 +186,15 @@ const getTradeSafeStatus = async (req, res) => {
             { where: { id: userId } }
           );
 
-          console.log("✅ TradeSafe status DB updated");
-          console.log("   Updated rows:", updatedRows);
         } else {
-          console.log("⚠️ TradeSafe token not found");
+          console.log("TradeSafe token not found");
         }
       } catch (error) {
-        console.warn("⚠️ Failed to fetch TradeSafe status:", error.message);
+        console.warn("Failed to fetch TradeSafe status:", error.message);
       }
     }
 
-    // ============================================================
-    // Response — using extracted variables
-    // ============================================================
+
     const responseData = {
       registered: Boolean(tradeSafeUserId),
       tradeSafeUserId: tradeSafeUserId || null,
@@ -227,14 +204,13 @@ const getTradeSafeStatus = async (req, res) => {
       bankVerificationStatus: currentBankVerificationStatus || "PENDING",
     };
 
-    console.log("📊 Final response data:", responseData);
 
     return res.status(200).json({
       success: true,
       data: responseData,
     });
   } catch (error) {
-    console.error("❌ Error fetching TradeSafe status:", error.message);
+    console.error("Error fetching TradeSafe status:", error.message);
     return res.status(500).json({
       success: false,
       error: "Failed to fetch TradeSafe status",

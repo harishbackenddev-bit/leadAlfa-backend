@@ -21,7 +21,7 @@ const parseCampaignBody = (body) => {
       try {
         parsed[field] = JSON.parse(parsed[field]);
       } catch (_) {
-        // Leave as-is; validator will catch invalid JSON
+  
       }
     }
   });
@@ -29,7 +29,6 @@ const parseCampaignBody = (body) => {
   if (parsed.petsRequired === "true")  parsed.petsRequired = true;
   if (parsed.petsRequired === "false") parsed.petsRequired = false;
 
-  // Coerce empty strings to null for optional nullable fields
   const nullableFields = [
     "numberOfCreators",
     "applicationDeadline",

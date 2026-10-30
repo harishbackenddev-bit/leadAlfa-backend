@@ -62,9 +62,7 @@ if (process.env.APP_ENV !== "production") {
 app.use(express.json());
 app.use(cookieParser());
 
-// ---------------------------------------------------------------------------
-// Health check endpoint — liveness only, no sensitive information exposed
-// ---------------------------------------------------------------------------
+
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -73,7 +71,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Function to run migrations automatically
+
 async function runMigrations() {
   const env = process.env.NODE_ENV || "development";
   try {
@@ -97,31 +95,28 @@ async function runMigrations() {
 
 (async () => {
   try {
-    // Run migrations before starting the server
+
     await runMigrations();
 
-    // Authenticate DB connection
+
     await testDbConnection();
     console.log("Database connection established successfully.");
 
     await runSeeds();
 
-    // Start Socket.IO server by passing the HTTP server
+
     const { io, pubClient, subClient } = await startSocketServer(server);
     app.set("io", io);
     global.__IO__ = io;
     console.log("Socket.IO server started and attached to HTTP server.");
 
-    // Start HTTP server (which handles both Express and Socket.IO)
+
     const PORT = process.env.PORT || 8080;
     server.listen(PORT, () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`Server is running on port ${PORT}`);
     });
 
-    // -----------------------------------------------------------------------
-    // Graceful shutdown — handles SIGTERM (Docker stop) and SIGINT (Ctrl+C)
-    // Order: stop HTTP → close Socket.IO → quit Redis → close DB → exit
-    // -----------------------------------------------------------------------
+
     let isShuttingDown = false;
 
     const shutdown = async (signal) => {
@@ -129,24 +124,24 @@ async function runMigrations() {
       isShuttingDown = true;
       console.log(`${signal} received. Starting graceful shutdown...`);
 
-      // 1. Stop accepting new HTTP connections; wait for active requests to finish
+
       server.close(async (serverErr) => {
         if (serverErr) console.error('Error closing HTTP server:', serverErr.message);
 
         try {
-          // 2. Close Socket.IO (flushes events and disconnects clients cleanly)
+  
           await io.close();
           console.log('Socket.IO closed.');
 
-          // 3. Quit Redis pub/sub clients (Socket.IO adapter)
+
           if (pubClient && pubClient.isOpen) await pubClient.quit();
           if (subClient && subClient.isOpen) await subClient.quit();
 
-          // 4. Quit the general Redis client (presence / unread counters)
+
           if (redis && redis.isOpen) await redis.quit();
           console.log('Redis clients closed.');
 
-          // 5. Close Sequelize connection pool
+
           await sequelize.close();
           console.log('Database connection closed.');
 
@@ -178,7 +173,7 @@ async function runMigrations() {
 app.use('/api', globalLimiter);
 
 
-// Routes
+
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/assets", assetRoutes);
@@ -204,10 +199,9 @@ app.use("/api/user-feedback", userFeedbackRoutes);
 app.use("/api/home", homeRoutes);
 app.use("/api", shipmentRoutes);
 
-// ========== REGISTER TRADESAFE ROUTES ==========
+
 
 app.use("/api/webhook", tradesafewebhookRoutes);
 app.use("/api/tradesafe", tradesafeRegistrationRoutes);
-console.log("✅ TradeSafe routes registered at /api/tradesafe");
+
 app.use("/api/tradesafe-payment", tradesafePaymentRoutes);
-console.log("✅ TradeSafe Payment routes registered at /api/tradesafe-payment");

@@ -1,8 +1,6 @@
 const { BankChangeRequest, User } = require('../models');
 
-// ============================================================
-// 1. CREATE — Creator submits
-// ============================================================
+
 async function createBankChangeRequestService(req) {
   try {
     const userId = req.currentUser;
@@ -15,7 +13,7 @@ async function createBankChangeRequestService(req) {
       tradeSafeReference,
     } = req.body;
 
-    // ---------- Validation ----------
+
     if (!reason || !reason.trim()) {
       return { success: false, message: 'Reason is required', code: 400 };
     }
@@ -32,7 +30,7 @@ async function createBankChangeRequestService(req) {
 
     const normalizedEmail = email.trim().toLowerCase();
 
-    // ---------- Check existing pending by email ----------
+  
     const existing = await BankChangeRequest.findPendingByEmail(normalizedEmail);
     if (existing) {
       return {
@@ -43,10 +41,10 @@ async function createBankChangeRequestService(req) {
       };
     }
 
-    // ---------- Optional user lookup by email ----------
+
     const user = await User.findOne({ where: { email: normalizedEmail } });
 
-    // ---------- Create ----------
+
     const request = await BankChangeRequest.create({
       email: normalizedEmail,
       userId: user?.id || null,
@@ -81,9 +79,7 @@ async function createBankChangeRequestService(req) {
   }
 }
 
-// ============================================================
-// 2. GET MY REQUESTS — email के through
-// ============================================================
+
 async function getMyBankChangeRequestsService(req) {
   try {
     const userId = req.currentUser;

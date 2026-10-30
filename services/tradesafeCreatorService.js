@@ -1,11 +1,7 @@
-// services/tradesafeCreatorService.js
 const tradesafeService = require('./tradesafe.service');
 const User = require('../models/user.model');
 
 const registerCreatorWithTradeSafe = async (userId, profileData, bankDetails) => {
-  console.log("🔐 registerCreatorWithTradeSafe STARTED");
-  console.log("   User ID:", userId);
-
   try {
     const user = await User.findByPk(userId);
     if (!user) {
@@ -13,7 +9,7 @@ const registerCreatorWithTradeSafe = async (userId, profileData, bankDetails) =>
     }
 
     if (user.tradeSafeUserId) {
-      console.log("ℹ️ User already registered with TradeSafe");
+
       return {
         tradeSafeUserId: user.tradeSafeUserId,
         tradeSafeReference: user.tradeSafeReference,
@@ -34,17 +30,13 @@ const registerCreatorWithTradeSafe = async (userId, profileData, bankDetails) =>
                              profileData.isSouthAfricanCitizen === true,
     };
 
-    console.log("📤 Prepared creator data:", creatorData);
+    console.log("Prepared creator data:", creatorData);
 
     const result = await tradesafeService.registerCreator(creatorData, {
       bankCode: bankDetails.bankCode,
       accountNumber: bankDetails.accountNumber,
       accountType: bankDetails.accountType || 'CHEQUE',
     });
-
-    console.log("✅ TradeSafe API call successful!");
-    console.log("   TradeSafe ID:", result.id);
-    console.log("   TradeSafe Reference:", result.reference);
 
     await user.update({
       tradeSafeUserId: result.id,
@@ -54,16 +46,15 @@ const registerCreatorWithTradeSafe = async (userId, profileData, bankDetails) =>
       bankVerificationStatus: 'PENDING',
     });
 
-    // Add user to organization
+
     try {
       const orgs = await tradesafeService.getOrganizations();
       const organizationId = orgs?.[0]?.id;
       if (organizationId) {
         await tradesafeService.addUserToOrganization(result.id, organizationId, 'MEMBER');
-        console.log(`✅ User ${result.id} added to organization`);
       }
     } catch (orgError) {
-      console.warn('⚠️ Could not add user to organization:', orgError.message);
+      console.warn('Could not add user to organization:', orgError.message);
     }
 
     return {
@@ -74,14 +65,12 @@ const registerCreatorWithTradeSafe = async (userId, profileData, bankDetails) =>
     };
 
   } catch (error) {
-    console.error("❌ registerCreatorWithTradeSafe FAILED:", error.message);
+    console.error("registerCreatorWithTradeSafe FAILED:", error.message);
     throw error;
   }
 };
 
 const getCreatorTradeSafeStatus = async (userId) => {
-  console.log("📊 getCreatorTradeSafeStatus STARTED");
-  console.log("   User ID:", userId);
 
   try {
     const user = await User.findByPk(userId, {
@@ -103,12 +92,11 @@ const getCreatorTradeSafeStatus = async (userId) => {
       try {
         const token = await tradesafeService.getTokenStatus(user.tradeSafeUserId);
         if (token && token.id) {
-          // Token exists, so it's active
-          // We'll keep our DB status as source of truth
+
           currentStatus = user.tradeSafeStatus;
         }
       } catch (error) {
-        console.warn('⚠️ Failed to fetch TradeSafe status:', error.message);
+        console.warn('Failed to fetch TradeSafe status:', error.message);
       }
     }
 
@@ -121,7 +109,7 @@ const getCreatorTradeSafeStatus = async (userId) => {
       bankVerificationStatus: user.bankVerificationStatus,
     };
   } catch (error) {
-    console.error("❌ Error in getCreatorTradeSafeStatus:", error.message);
+    console.error("Error in getCreatorTradeSafeStatus:", error.message);
     throw error;
   }
 };

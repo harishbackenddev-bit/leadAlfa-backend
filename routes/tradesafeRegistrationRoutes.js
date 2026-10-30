@@ -1,4 +1,3 @@
-// routes/tradesafeRegistrationRoutes.js
 const express = require("express");
 const router = express.Router();
 const { authenticateJWT } = require("../middlewares/authMiddleware");
@@ -10,9 +9,6 @@ const {
   getTradeSafeStatus,
 } = require("../controllers/tradesafeRegistrationController");
 
-// ============================================================
-// CREATOR REGISTRATION
-// ============================================================
 router.post(
   "/register/creator",
   authenticateJWT,
@@ -20,9 +16,6 @@ router.post(
   registerCreator
 );
 
-// ============================================================
-// BRAND REGISTRATION
-// ============================================================
 router.post(
   "/register/brand",
   authenticateJWT,
@@ -30,19 +23,11 @@ router.post(
   registerBrand
 );
 
-// ============================================================
-// TRADESAFE STATUS
-// ============================================================
 router.get(
   "/status",
   authenticateJWT,
   getTradeSafeStatus
 );
-
-// ============================================================
-// BANK CHANGE REQUEST — Creator only
-// ============================================================
-
 
 router.post(
   "/bank-change-request",

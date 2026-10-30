@@ -25,7 +25,7 @@ const handleBrandMediaUploads = async (
   for (const { field, type, mediaKey } of mediaMapping) {
     if (files[field]?.[0]) {
 
-      // Remove existing media of the same type
+
       const existingLinks = await BrandMedia.findAll({
         where: {brandId: brandProfileId, usageType: type },
         attributes: ["mediaId"],
@@ -56,8 +56,6 @@ const createOrUpdateBrandProfile = async (userId, profileData, files) => {
   const transaction = await sequelize.transaction();
   try {
     let profile = await BrandProfile.findOne({ where: { userId } });
-
-    console.log("Profile Data:", profileData);
 
     if (profile) {
       if (typeof profileData.companyRegistrationNumber === "string" && profileData.companyRegistrationNumber.includes("*")) {

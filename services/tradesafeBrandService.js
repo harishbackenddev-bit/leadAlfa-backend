@@ -1,4 +1,3 @@
-// services/tradesafeBrandService.js
 const tradesafeService = require('./tradesafe.service');
 const User = require('../models/user.model');
 
@@ -26,15 +25,14 @@ const mapBusinessTypeToOrgType = (businessType) => {
 
   const mapped = typeMap[businessType?.toLowerCase()];
   if (!mapped) {
-    console.warn(`⚠️ Unknown business type: "${businessType}", defaulting to "PRIVATE"`);
+    console.warn(`Unknown business type: "${businessType}", defaulting to "PRIVATE"`);
     return 'PRIVATE';
   }
   return mapped;
 };
 
 const registerBrandWithTradeSafe = async (userId, brandData, bankDetails) => {
-  console.log("🏢 registerBrandWithTradeSafe STARTED");
-  console.log("   User ID:", userId);
+
 
   try {
     const user = await User.findByPk(userId);
@@ -43,7 +41,7 @@ const registerBrandWithTradeSafe = async (userId, brandData, bankDetails) => {
     }
 
     if (user.tradeSafeUserId) {
-      console.log("ℹ️ Brand already registered with TradeSafe");
+      console.log("Brand already registered with TradeSafe");
       return {
         tradeSafeUserId: user.tradeSafeUserId,
         tradeSafeReference: user.tradeSafeReference,
@@ -70,13 +68,8 @@ const registerBrandWithTradeSafe = async (userId, brandData, bankDetails) => {
       },
     };
 
-    console.log("📤 Prepared brand data:", brandDataForTradeSafe);
-
     const result = await tradesafeService.registerBrand(brandDataForTradeSafe);
 
-    console.log("✅ TradeSafe API call successful!");
-    console.log("   TradeSafe ID:", result.id);
-    console.log("   TradeSafe Reference:", result.reference);
 
     await user.update({
       tradeSafeUserId: result.id,
@@ -85,16 +78,16 @@ const registerBrandWithTradeSafe = async (userId, brandData, bankDetails) => {
       kycStatus: 'SUBMITTED',
     });
 
-    // Add user to organization
+
     try {
       const orgs = await tradesafeService.getOrganizations();
       const organizationId = orgs?.[0]?.id;
       if (organizationId) {
         await tradesafeService.addUserToOrganization(result.id, organizationId, 'MEMBER');
-        console.log(`✅ Brand ${result.id} added to organization`);
+        console.log(`Brand ${result.id} added to organization`);
       }
     } catch (orgError) {
-      console.warn('⚠️ Could not add brand to organization:', orgError.message);
+      console.warn('Could not add brand to organization:', orgError.message);
     }
 
     return {
@@ -105,14 +98,13 @@ const registerBrandWithTradeSafe = async (userId, brandData, bankDetails) => {
     };
 
   } catch (error) {
-    console.error("❌ registerBrandWithTradeSafe FAILED:", error.message);
+    console.error("registerBrandWithTradeSafe FAILED:", error.message);
     throw error;
   }
 };
 
 const getBrandTradeSafeStatus = async (userId) => {
-  console.log("📊 getBrandTradeSafeStatus STARTED");
-  console.log("   User ID:", userId);
+
 
   try {
     const user = await User.findByPk(userId, {
@@ -138,11 +130,9 @@ const getBrandTradeSafeStatus = async (userId) => {
         const token = await tradesafeService.getTokenStatus(
           user.tradeSafeUserId
         );
-console.log("tokenreponse",token);
-        if (token && token.id) {
-          console.log("✅ TradeSafe API status completed successfully");
 
-          // Update statuses
+        if (token && token.id) {
+
           currentStatus = 'verified';
           currentKycStatus = 'verified';
           currentBankVerificationStatus = 'verified';
@@ -160,17 +150,10 @@ console.log("tokenreponse",token);
             }
           );
 
-          console.log("✅ TradeSafe statuses updated in DB");
-          console.log("   tradeSafeStatus:", currentStatus);
-          console.log("   kycStatus:", currentKycStatus);
-          console.log(
-            "   bankVerificationStatus:",
-            currentBankVerificationStatus
-          );
         }
       } catch (error) {
         console.warn(
-          '⚠️ Failed to fetch TradeSafe status:',
+          'Failed to fetch TradeSafe status:',
           error.message
         );
       }
@@ -187,7 +170,7 @@ console.log("tokenreponse",token);
 
   } catch (error) {
     console.error(
-      "❌ Error in getBrandTradeSafeStatus:",
+      "Error in getBrandTradeSafeStatus:",
       error.message
     );
 

@@ -233,7 +233,7 @@ const updateCampaign = async (userId, brandId, publicId, updates, files) => {
       throw new AppError("Published campaigns cannot be edited.", 403);
     }
 
-    // ✅ Sirf campaign funding status check karo — invoice mat dekho
+
     const blockedFundingStatuses = ['FUNDS_RECEIVED', 'FUNDED'];
     if (blockedFundingStatuses.includes(campaign.fundingStatus)) {
       throw new AppError(
@@ -588,7 +588,7 @@ const getPublicActiveCampaigns = async (page = 1, limit = 10) => {
         (m) => m.usageType === CAMPAIGN_MEDIA_TYPES.MOODBOARDS,
       ) || [];
 
-    // ✅ Sirf ye calculate karo
+
     const creatorAmount =
       invoice?.cartSubtotal && campaign.numberOfCreators
         ? parseFloat(invoice.cartSubtotal) / campaign.numberOfCreators
@@ -603,7 +603,7 @@ const getPublicActiveCampaigns = async (page = 1, limit = 10) => {
       creatorVisibleBudget: invoice?.cartSubtotal
         ? parseFloat(invoice.cartSubtotal)
         : null,
-      // ✅ Sirf ye 1 line add hui
+
       creatorAmount,
     };
   });
