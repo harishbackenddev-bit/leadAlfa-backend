@@ -28,14 +28,22 @@ const {
 
 const applyToCampaign = async (
   userId,
-  campaignId,
+  campaignIdOrPublicId,   // renamed to make the contract explicit
   creatorId,
   applicationData
 ) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const campaign = await Campaign.findByPk(campaignId);
+    // --- 1. Resolve the campaign by PK *or* publicId -------------------
+    const raw = String(campaignIdOrPublicId).trim();
+    const isNumericId = /^\d+$/.test(raw);
+
+    const campaign = await Campaign.findOne({
+      where: isNumericId ? { id: Number(raw) } : { publicId: raw },
+      transaction,
+    });
+
     if (!campaign || campaign.status !== "active") {
       throw new AppError(
         "Campaign not found or not currently active for applications",
@@ -43,21 +51,37 @@ const applyToCampaign = async (
       );
     }
 
-    // Check if there is an active invitation for this creator and campaign
+    // --- 2. From here on, ONLY use the numeric PK ----------------------
+    const campaignId = campaign.id;
+
     const invitation = await CampaignInvitation.findOne({
       where: {
-        campaignId,
+        campaignId,                     // <-- was the raw param before
         creatorId,
         status: { [Op.in]: ["pending", "accepted"] },
       },
       transaction,
     });
-
     const invitationId = invitation ? invitation.id : null;
 
+    // --- 3. Validate media BEFORE creating the application -------------
+    const mediaId = Number.parseInt(applicationData.mediaId, 10);
+    if (!Number.isInteger(mediaId)) {
+      throw new AppError("A valid mediaId is required.", 400);
+    }
+
+    const mediaRecord = await Media.findByPk(mediaId, { transaction });
+    if (!mediaRecord) {
+      throw new AppError(
+        "The provided mediaId does not exist. Please register your upload first.",
+        400
+      );
+    }
+
+    // --- 4. Create application -----------------------------------------
     const application = await CampaignApplication.create(
       {
-        campaignId,
+        campaignId,                     // numeric PK, not "CMP-..."
         creatorId,
         pitch: applicationData.pitch,
         applicationStatus: "pending",
@@ -67,19 +91,7 @@ const applyToCampaign = async (
     );
 
     if (invitation) {
-      await invitation.update(
-        { status: "accepted" },
-        { transaction }
-      );
-    }
-
-    const mediaId = parseInt(applicationData.mediaId, 10);
-    const mediaRecord = await Media.findByPk(mediaId, { transaction });
-    if (!mediaRecord) {
-      throw new AppError(
-        "The provided mediaId does not exist. Please register your upload first.",
-        400
-      );
+      await invitation.update({ status: "accepted" }, { transaction });
     }
 
     await linkMediaToEntity(
@@ -89,8 +101,6 @@ const applyToCampaign = async (
       CAMPAIGN_APPLICATION_MEDIA_TYPES.VIDEO_PITCH,
       transaction
     );
-
-    const uploadedMedia = { pitchVideo: mediaRecord };
 
     await transaction.commit();
 
@@ -108,12 +118,13 @@ const applyToCampaign = async (
     const appJson = application.toJSON();
     delete appJson.proposedBudget;
 
-    return { application: appJson, media: uploadedMedia };
+    return { application: appJson, media: { pitchVideo: mediaRecord } };
   } catch (err) {
     await transaction.rollback();
     throw err;
   }
 };
+
 
 const withdrawApplication = async (creatorId, applicationId) => {
   const transaction = await sequelize.transaction();
