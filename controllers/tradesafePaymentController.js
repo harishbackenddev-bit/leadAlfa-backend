@@ -1,0 +1,393 @@
+const {
+  getAcceptedCreatorsForPayment,
+  syncAcceptedCreators,
+  fundCampaign,
+  simulateCampaignFundedSandbox,
+  createCreatorEscrow,
+  fundCreatorEscrow,
+  refundUnusedBudget,
+  releaseFundsToCreator,
+  getCampaignPaymentStatus,
+  getCreatorPaymentSummary,
+  getCreatorWalletBalance,
+  withdrawCreatorFunds,
+  getCreatorTransactionHistory,
+  cancelCreatorEscrow,
+} = require("../services/tradesafePaymentService");
+
+
+const {
+  generateFundingQuote,
+  getAvailablePaymentMethods,
+} = require("../services/fundingQuoteService");
+
+const FundingBatch = require("../models/transaction/fundingBatch.model");
+const Campaign = require("../models/campaigns/campaign.model");
+const AppError = require("../utils/appError");
+const CampaignInvoice = require("../models/campaigns/campaignInvoice.model");
+const Invoice = require("../models/campaigns/campaignInvoice.model");
+
+const errResp = (res, err) => {
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({ success: false, error: err.message });
+  }
+  console.error("Controller error:", err.message);
+  return res.status(500).json({ success: false, error: "Something went wrong. Please try again later." });
+};
+
+
+const resolveCampaignId = async (identifier) => {
+  if (!identifier) throw new AppError("Campaign identifier missing", 400);
+
+  if (/^\d+$/.test(String(identifier))) {
+    return parseInt(identifier, 10);
+  }
+
+  const campaign = await Campaign.findOne({
+    where: { publicId: identifier },
+    attributes: ["id"],
+  });
+  if (!campaign) throw new AppError(`Campaign not found: ${identifier}`, 404);
+
+  return campaign.id;
+};
+
+
+const getAcceptedCreatorsController = async (req, res) => {
+  try {
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+    const result = await getAcceptedCreatorsForPayment(campaignId, req.brandId);
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) { return errResp(res, err); }
+};
+
+
+const syncAcceptedCreatorsController = async (req, res) => {
+  try {
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+    const result = await syncAcceptedCreators(campaignId, req.brandId);
+    return res.status(200).json({ success: true, message: "Synced", data: result });
+  } catch (err) { return errResp(res, err); }
+};
+
+
+const fundCampaignController = async (req, res) => {
+  try {
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+    const { paymentMethod, quoteVersion } = req.body;
+
+    console.log("📩 fundCampaign called:", {
+      campaignId,
+      brandId: req.brandId,
+      paymentMethod,
+      quoteVersion,
+    });
+
+
+    if (!paymentMethod) {
+      return res.status(400).json({
+        success: false,
+        error: "paymentMethod required in body",
+      });
+    }
+
+    const result = await fundCampaign(campaignId, req.brandId, {
+      paymentMethod,
+      quoteVersion,
+    });
+
+    return res.status(201).json({ success: true, data: result });
+  } catch (err) {
+    return errResp(res, err);
+  }
+};
+
+
+const simulateFundedController = async (req, res) => {
+  try {
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+
+    const fundingBatch = await FundingBatch.findOne({
+      where: { campaignId, type: "CAMPAIGN_FUNDING" },
+    });
+    if (!fundingBatch) {
+      return res.status(404).json({ success: false, error: "Funding batch not found" });
+    }
+
+    const result = await simulateCampaignFundedSandbox(fundingBatch.id);
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) { return errResp(res, err); }
+};
+
+
+const selectCreatorController = async (req, res) => {
+  try {
+    const { creatorId } = req.body;
+
+    if (!creatorId) {
+      return res.status(400).json({ success: false, error: "creatorId required" });
+    }
+
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+
+    const campaign = await Campaign.findOne({
+      where: { id: campaignId },
+      attributes: ["id", "publicId", "numberOfCreators", "campaignBudgetCents", "availableBudgetCents"],
+    });
+
+    if (!campaign) {
+      return res.status(404).json({ success: false, error: "Campaign not found" });
+    }
+
+    let perCreatorAmount;
+
+    const totalBudgetCents = campaign.campaignBudgetCents;
+    const creatorCount = campaign.numberOfCreators || 1;
+
+    if (totalBudgetCents > 0) {
+      perCreatorAmount = totalBudgetCents / creatorCount / 100;
+    } else {
+      const invoice = await CampaignInvoice.findOne({
+        where: { campaignId: campaign.id },
+        attributes: ["cartSubtotal", "numberOfCreators"],
+      });
+
+      if (!invoice) {
+        return res.status(400).json({
+          success: false,
+          error: "No campaign budget or invoice found",
+        });
+      }
+
+      const invoiceCreators = invoice.numberOfCreators || 1;
+      perCreatorAmount = parseFloat(invoice.cartSubtotal) / invoiceCreators;
+    }
+
+    if (!perCreatorAmount || perCreatorAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Could not calculate creator amount",
+      });
+    }
+
+    console.log(
+      `Creator ${creatorId} amount: R${perCreatorAmount.toFixed(2)} (budget R${totalBudgetCents / 100} / ${creatorCount} creators)`
+    );
+
+    const result = await createCreatorEscrow(
+      campaignId,
+      creatorId,
+      perCreatorAmount,
+      req.brandId
+    );
+
+    return res.status(201).json({ success: true, data: result });
+  } catch (err) {
+    if (err instanceof AppError) {
+      return res.status(err.statusCode).json({ success: false, error: err.message });
+    }
+    console.error("selectCreator error:", err.message);
+    return res.status(500).json({ success: false, error: "Something went wrong." });
+  }
+};
+
+
+const fundCreatorController = async (req, res) => {
+  try {
+    const result = await fundCreatorEscrow(req.params.id);
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) { return errResp(res, err); }
+};
+
+
+const refundUnusedController = async (req, res) => {
+  try {
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+    const result = await refundUnusedBudget(campaignId);
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) { return errResp(res, err); }
+};
+
+
+const getCampaignPaymentStatusController = async (req, res) => {
+  try {
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+    const result = await getCampaignPaymentStatus(campaignId, req.brandId);
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) { return errResp(res, err); }
+};
+
+
+const getCreatorPaymentSummaryController = async (req, res) => {
+  try {
+    const result = await getCreatorPaymentSummary(req.params.creatorId);
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) { return errResp(res, err); }
+};
+
+
+const releaseFundsToCreatorController = async (req, res) => {
+  try {
+    const { creatorId } = req.body;
+    if (!creatorId) {
+      return res.status(400).json({ success: false, error: "Creator ID is required" });
+    }
+
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+    const brandUserId = req.brandId || req.user.id;
+
+    const result = await releaseFundsToCreator(campaignId, creatorId, brandUserId);
+
+    const message =
+      result.status === "PAYOUT_TRIGGERED"
+        ? "Payout triggered. Awaiting TradeSafe confirmation."
+        : result.status === "PENDING_ACCEPTANCE"
+          ? "Waiting on TradeSafe acceptance callback."
+          : "Funds released successfully";
+
+    return res.status(200).json({ success: true, message, data: result });
+  } catch (err) { return errResp(res, err); }
+};
+
+
+const getCreatorBalanceController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await getCreatorWalletBalance(userId);
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) { return errResp(res, err); }
+};
+
+
+const withdrawCreatorFundsController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { amount } = req.body;
+
+    if (!amount) {
+      return res.status(400).json({ success: false, error: "Amount required" });
+    }
+
+    const result = await withdrawCreatorFunds(userId, amount);
+    return res.status(201).json({ success: true, data: result });
+  } catch (err) { return errResp(res, err); }
+};
+
+
+const getCreatorTransactionHistoryController = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const filter = req.query.filter || "all";
+
+    const result = await getCreatorTransactionHistory(userId, { page, limit, filter });
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) { return errResp(res, err); }
+};
+
+
+const getPaymentMethodsController = async (req, res) => {
+  try {
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+
+    const campaign = await Campaign.findOne({
+      where: { id: campaignId, brandId: req.brandId, isDeleted: false },
+      attributes: ["id", "campaignBudgetCents"],
+    });
+    if (!campaign) {
+      return res.status(404).json({ success: false, error: "Campaign not found" });
+    }
+
+
+    let campaignAmount = (campaign.campaignBudgetCents || 0) / 100;
+
+    if (campaignAmount <= 0) {
+      const invoice = await Invoice.findOne({
+        where: { campaignId: campaign.id },
+        attributes: ["cartSubtotal"],
+      });
+      if (invoice) {
+        campaignAmount = parseFloat(invoice.cartSubtotal || 0);
+      }
+    }
+
+    if (campaignAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Campaign amount not available. Please save the campaign first.",
+      });
+    }
+
+    const methods = getAvailablePaymentMethods(campaignAmount);
+
+    return res.status(200).json({
+      success: true,
+      data: { campaignAmount, currency: "ZAR", methods },
+    });
+  } catch (err) { return errResp(res, err); }
+};
+
+
+const generateFundingQuoteController = async (req, res) => {
+  try {
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+    const { paymentMethod } = req.body;
+
+    if (!paymentMethod) {
+      return res.status(400).json({ success: false, error: "paymentMethod required" });
+    }
+
+    const campaign = await Campaign.findOne({
+      where: { id: campaignId, brandId: req.brandId, isDeleted: false },
+      attributes: ["id", "campaignBudgetCents"],
+    });
+    if (!campaign) {
+      return res.status(404).json({ success: false, error: "Campaign not found" });
+    }
+
+    const quote = await generateFundingQuote(campaign, paymentMethod);
+    return res.status(200).json({ success: true, data: quote });
+  } catch (err) { return errResp(res, err); }
+};
+
+
+const cancelCreatorEscrowController = async (req, res) => {
+  try {
+    const { creatorId, reason } = req.body;
+    if (!creatorId) {
+      return res.status(400).json({ success: false, error: "creatorId required" });
+    }
+
+    const campaignId = await resolveCampaignId(req.params.campaignId);
+    const result = await cancelCreatorEscrow(
+      campaignId,
+      creatorId,
+      req.brandId,
+      reason
+    );
+
+    return res.status(200).json({ success: true, data: result });
+  } catch (err) {
+    return errResp(res, err);
+  }
+};
+
+module.exports = {
+  getAcceptedCreatorsController,
+  syncAcceptedCreatorsController,
+  fundCampaignController,
+  simulateFundedController,
+  selectCreatorController,
+  fundCreatorController,
+  refundUnusedController,
+  getCampaignPaymentStatusController,
+  getCreatorPaymentSummaryController,
+  releaseFundsToCreatorController,
+  getCreatorBalanceController,
+  withdrawCreatorFundsController,
+  getCreatorTransactionHistoryController,
+  getPaymentMethodsController,
+  generateFundingQuoteController,
+  cancelCreatorEscrowController,
+};
